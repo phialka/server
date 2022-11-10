@@ -1,0 +1,1 @@
+DATABASE_URL = "postgresql://username:password@ip:port/DBname"

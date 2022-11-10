@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 import schemas
-from db_controllers import profile_funcs
+from controllers import profile_funcs
 
 profile_router = APIRouter(
     prefix = "/profile",

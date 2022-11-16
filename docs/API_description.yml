@@ -1,0 +1,2351 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title: Phialka API documentation
+  description: ''
+
+host: phialka.domen
+basePath: /api
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+  server_auth:
+    type: oauth2
+    authorizationUrl: https://phialka.domen/oauth/authorize
+    flow: implicit
+    scopes:
+      read:profile_info: Разрешение на чтение информации профиля
+      all:profile_info: Разрешение на чтение и изменение информации профиля
+      read:profile_options: Разрешение на чтение информации о настройках профиля
+      all:profile_options: Разрешение на чтение и изменение информации о настройках профиля
+      read:messages: Разрешение на чтение сообщений в чатах и каналах
+      all:messages: Разрешение на чтение и отправку сообщений
+      all:channels: Разрешение на управление вашими каналами
+      
+
+paths: 
+  /profile:
+    post:
+      summary: 
+        Register a new account
+      tags:
+      - Profile
+      parameters:
+      - name: username
+        in: query
+        type: string
+        required: true
+        description: Short unique username
+      - name: name
+        in: query
+        type: string
+        required: true
+        description: Name
+      - name: description
+        in: query
+        type: string
+        required: false
+        description: Profile description (no more than 100 characters)
+      - name: email
+        in: query
+        type: string
+        description: Email address (required to confirm registration)
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Successful 
+        '404':
+          description: Error in the specified field
+          schema:
+            type: string
+            example: "email: already exists"
+    patch:
+      summary: 
+        Changes the information specified in the profile
+      tags:
+      - Profile
+      parameters:
+      - name: username
+        in: query
+        type: string
+        description: Short unique username
+      - name: name
+        in: query
+        type: string
+        required: false
+        description: User name (no more than 4 words, no more than 30 characters)
+      - name: description
+        in: query
+        type: string
+        required: false
+        description: Profile description (no more than 100 characters)
+      - name: email
+        in: query
+        type: string
+        description: Email address (required to confirm registration)
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Information updated
+
+  /profile/checkUsername:
+    get:
+      summary: 
+        Checks whether the username is available for use
+      tags:
+      - Profile
+      parameters:
+      - name: username
+        in: query
+        type: string
+        required: true
+        description: username for verification
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns name status
+          schema:
+            type: string
+            example: occupied
+            
+          
+  /profile/checkEmail:
+    get:
+      summary: 
+        Checks whether the email address is available for use
+      tags:
+      - Profile
+      parameters:
+      - name: email
+        in: query
+        type: string
+        required: true
+        description: email for verification
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns name status
+          schema:
+            type: string
+            example: occupied
+        '400':
+          description: Incorrect email
+        
+  /profile/privacy_options:
+    patch:
+      summary: 
+        Edit profile privacy options
+      tags:
+      - Profile
+      parameters:
+      - name: can_found
+        in: query
+        type: integer
+        required: false
+        description: "Можно ли найти профиль при поиске по имени\n0 - не может быть найден\n 1 - может быть найден"
+      - name: last_visit
+        in: query
+        type: integer
+        required: false
+        description: "Кто может видеть время последнего посещения\n0 - никто\n1 - только друзья\n2 - все"
+      - name: audio_call
+        in: query
+        type: integer
+        required: false
+        description: "Кто может совершать аудиозвонок\n0 - никто\n1 - только друзья\n2 - все"
+      - name: video_call
+        in: query
+        type: integer
+        required: false
+        description: "Кто может совершать видеозвонок\n0 - никто\n1 - только друзья\n2 - все"
+      - name: forwarding
+        in: query
+        type: integer
+        required: false
+        description: "Кто может пересылать ваши сообщения из личных чатов\n0 - никто\n1 - только друзья\n2 - все"
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Profile options updated
+        
+  /profile/photo:
+    put:
+      summary: 
+        Changes the profile photo
+      tags:
+      - Profile
+      consumes:
+      - multipart/form-data
+      parameters:
+      - name: photo
+        in: formData
+        type: file
+        required: true
+        description: Image file
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: New profile photo installed
+          schema:
+              $ref: "#/definitions/Photo"
+  
+  /profile/user_lists:
+    get:
+      summary: 
+        Get your user lists
+      tags:
+      - Profile
+      parameters:
+      - name: offset
+        in: query
+        type: integer
+        required: false
+        default: 0
+        description: Shift from the beginning of the list
+      - name: count
+        in: query
+        type: integer
+        required: false
+        default: 20
+        maximum: 100
+        description: Number of objects from the list
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns a list - no more than 100 objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User_list'
+    post:
+      summary: 
+        Create user list
+      tags:
+      - Profile
+      parameters:
+      - name: list
+        in: body
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "Debtors >:/"
+            ban:
+              type: boolean
+              example: 1
+              description: Can users from the list write to you
+            ignore:
+              type: boolean
+              example: 1
+              description: Should the user receive notifications about messages from users from the list
+            user_ids:
+              type: array
+              items:
+                type: string
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns a new list object
+          schema:
+            $ref: '#/definitions/User_list'
+              
+  /profile/user_lists/{list_id}:
+    get:
+      summary: 
+        Get a list object
+      tags:
+      - Profile
+      parameters:
+      - name: list_id
+        in: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns a list objects
+          schema:
+              $ref: '#/definitions/User_list'
+
+  /profile/user_lists/{list_id}/users:
+    get:
+      summary: 
+        Get a list of users
+      tags:
+      - Profile
+      parameters:
+      - name: list_id
+        in: path
+        required: true
+        type: string
+      - name: offset
+        in: query
+        type: integer
+        required: false
+        default: 0
+        description: Shift from the beginning of the list
+      - name: count
+        in: query
+        type: integer
+        required: false
+        default: 20
+        maximum: 100
+        description: Number of objects from the list
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns a list - no more than 100 users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: 
+        Adds a user to the list
+      tags:
+      - Profile
+      parameters:
+      - name: list_id
+        in: path
+        type: string
+        required: true
+      - name: user_id
+        in: query
+        type: string
+        required: true
+        description: ID of the user to be added to the list
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: User added to the list
+        '404':
+          description: User not exist
+    delete:
+      summary: 
+        Removes the specified user from the list
+      tags:
+      - Profile
+      parameters:
+      - name: list_id
+        in: path
+        type: string
+        required: true
+      - name: user_id
+        in: query
+        type: string
+        required: true
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: The user has been removed from the list
+        '404':
+          description: User not exist
+  
+  /users/search:
+    get:
+      summary: 
+        Returns a list of users by search query
+      tags:
+      - Users
+      parameters:
+      - name: string
+        in: query
+        type: string
+        required: true
+        description: Поисковый запрос
+      - name: offset
+        in: query
+        type: integer
+        required: false
+        default: 0
+        description: Сдвиг от начала списка пользователей
+      - name: count
+        in: query
+        type: integer
+        required: false
+        default: 20
+        maximum: 100
+        description: Количество пользователей из списка
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Возвращает список - не более 100 пользователей наиболее подходящих под поисковый запрос (с совпадающим именем или username)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        '404':
+          description: Пользователи с таким username не найдены
+  
+
+  /users/{user_id}:
+    get:
+      summary: 
+        Returns a user object with the specified id
+      tags:
+      - Users
+      parameters:
+      - name: user_id
+        in: path
+        type: string
+        required: true
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns user object
+          schema:
+            $ref: '#/definitions/User'
+        '404':
+          description: User not exist
+          
+  /users/getID:
+    get:
+      summary: 
+        Returns the user id with the specified username
+      tags:
+      - Users
+      parameters:
+      - name: username
+        in: query
+        type: string
+        required: true
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: Returns user_id
+          schema:
+            type: integer
+            example: 777000
+        '404':
+          description: User not exist
+          
+          
+          
+#############################################
+##########          CHATS           #########
+#############################################
+
+  
+  /chats:
+    get:
+      summary: 
+        Get a list of chats in which the current user is a member
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        default: 30
+        maximum: 100
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+      responses:
+        '200':
+          description: Successfully, returns an array of chat objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+        Creates a conversation with multiple participants
+      tags:
+      - Chats
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: query
+        name: user_ids
+        type: string
+        description: IDs of users to include in the multidirectory
+        required: true
+      - in: query
+        name: title
+        type: string
+        description: The name of the chat
+        required: true
+      - in: query
+        name: description
+        type: string
+        description: Description of the chat
+      - name: photo
+        in: formData
+        type: file
+        description: Chat photo
+      responses:
+        '200':
+          description: Successfully, returns chat object
+          schema:
+              $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/important:
+    get:
+      summary: Returns chats marked as important
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        default: 30
+        maximum: 100
+        description: The number of objects to get
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+        description: Offset from the beginning of the list of important chats
+      responses:
+        '200':
+          description: Successfully, returns list of chats objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: Marks chats as important
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: chat_ids
+        type: string
+        description: ID of chats
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Unmarks chats as important
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: chat_ids
+        type: string
+        description: ID of chats
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/messages:
+    get:
+      summary: Returns new messages from chats
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        default: 30
+        maximum: 100
+        description: The number of objects to get
+      responses:
+        '200':
+          description: Successfully, returns list of message objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Message"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: Sends a messages
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: user_ids
+        type: integer
+        required: true
+        format: int32
+        description: IDs of the users you want to send a private message to
+      - in: query
+        name: chat_ids
+        type: integer
+        required: true
+        description: ID of the private chats or groups to which you want to send a message
+      - in: body
+        name: message
+        schema:
+          type: object
+          properties:
+            text:
+              type: string
+              example: Hello, Nikita!
+              description: Message text
+            attachments:
+              type: string
+              description: Media attachments to a personal message, separated by commas
+            reply_to:
+              type: integer
+              description: ID of the message to be answered (must be in the chat to which the message is being sent)
+            forward_messages:
+              type: integer
+              description: Ids of forwarded messages
+            sticker_id:
+              type: integer
+              description: Sticker ID
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Deletes the message
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: message_ids
+        type: string
+        description: Comma-separated list of message IDs
+        required: true
+      - in: query
+        name: spam
+        type: string
+        description: Mark messages as spam
+      - in: query
+        name: delete_for_all
+        type: integer
+        description: 1 — if the message needs to be deleted for recipients
+      - in: query
+        name: chat_id
+        type: string
+        description: ID of the conversation to delete messages from
+      - in: query
+        name: cmids
+        type: string
+        description: Ids of the message in the conversation
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/messages/important:
+    get:
+      summary: Returns messages marked as important
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        default: 30
+        maximum: 100
+        description: The number of objects to get
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+        description: Offset from the beginning of the list of important messages
+      responses:
+        '200':
+          description: Successfully, returns list of message objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Message"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/messages/search:
+    get:
+      summary: Returns a list of found private messages of the current user by the entered search string
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: search_query
+        type: string
+        description: Search text
+      - in: query
+        name: date 
+        type: string
+        description: Date in DDMMYYYY format
+      - in: query
+        name: chat_id
+        type: integer
+        description: To search in the chat
+      - in: query
+        name: member_id
+        type: integer
+        description: To search by author
+      - in: query
+        name: count
+        type: string
+        description: Number of messages
+      - in: query
+        name: offset
+        type: integer
+        description: Offset from the beginning of the list of messages
+      responses:
+        '200':
+          description: Successfully, returns list of message objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Message"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/messages/restore:
+    post:
+      summary: Restores a deleted message
+      tags:
+      - Chats
+      parameters:
+      - in: query
+        name: message_ids
+        type: string
+        description: The ID of the message
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/messages/{message_id}:
+    patch:
+      summary: Edits the message
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: message_id
+        type: string
+        required: true
+      - in: body
+        name: message
+        schema:
+          type: object
+          properties:
+            text:
+              type: string
+              example: Hello, Nikita!
+              description: Message text
+            attachments:
+              type: string
+              description: Media attachments to a personal message, separated by commas
+            reply_to:
+              type: integer
+              description: ID of the message to be answered (must be in the chat to which the message is being sent)
+            forward_messages:
+              type: integer
+              description: Ids of forwarded messages
+            sticker_id:
+              type: integer
+              description: Sticker ID
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+
+  /chats/{chat_id}:
+    get:
+      summary: Returns the chat object
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      responses:
+        '200':
+          description: Successfully, returns chat object
+          schema:
+              $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    patch:
+      summary: Changes the chat object
+      tags:
+      - Chats
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: Conversation ID
+      - in: query
+        name: title
+        type: string
+        description: A new name for the conversation
+      - in: query
+        name: description
+        type: string
+        description: A new description of the chat
+      - name: photo
+        in: formData
+        type: file
+        description: Chat photo
+      responses:
+        '200':
+          description: Successfully, returns new chat object
+          schema:
+              $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Allows you to delete a chat
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: Conversation ID
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/join:
+    patch:
+      summary: 
+          Join to a chat
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            $ref: "#/definitions/Chat"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/leave:
+    patch:
+      summary: 
+          Leave a chat
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/photo:
+    put:
+      summary: Set the chat photo
+      tags:
+      - Chats
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      - name: photo
+        in: formData
+        type: file
+        description: Chat photo
+      responses:
+        '200':
+          description: Successfully, returns new photo object
+          schema:
+              $ref: "#/definitions/Photo"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Allows you to delete a photo of a multichat
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/files:
+    get:
+      summary: Returns the materials of a dialog or conversation
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: Conversation ID
+      - in: query
+        name: media_type
+        type: string
+        required: true
+        description: The type of materials to be returned
+      - in: query
+        name: count
+        type: string
+        description: The number of objects to get
+      - in: query
+        name: offset
+        type: integer
+        description: Offset from the beginning of the attachment list
+      responses:
+        '200':
+          description: Successfully, returns photo/video/file objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Photo"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+
+  /chats/{chat_id}/members:
+    get:
+      summary: Allows you to get a list of conversation participants
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: Conversation ID
+      - in: query
+        name: count
+        type: string
+        description: Number of members
+      - in: query
+        name: offset
+        type: integer
+        description: Offset from the beginning of the members list
+      responses:
+        '200':
+          description: Successfully, returns user objects
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/User"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+        Adds a new users to the group
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        format: int32
+      - in: query
+        name: user_ids
+        type: string
+        required: true
+        format: int32
+      - in: query
+        name: visible_messages_count
+        type: integer
+        required: true
+        format: int32
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Excludes a user from the multidirectory
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: Conversation ID
+      - in: query
+        name: member_id
+        type: integer
+        description: ID of the conversation participant
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+  
+  /chats/{chat_id}/messages/pin:
+    post:
+      summary: Anchors the message
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        required: true
+        type: string
+        description: ID of chat
+      - in: query
+        name: message_id
+        type: string
+        description: The ID of the message
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: Unpin a message
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        required: true
+        type: string
+        description: ID of chat
+      - in: query
+        name: message_id
+        type: string
+        description: The ID of the message
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/messages/important: 
+    post:
+      summary: Marks messages as important or unchecks them
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+        description: The ID of the chat
+      - in: query
+        name: message_ids
+        type: string
+        required: true
+        description: The ID of the messages
+      - in: query
+        name: important
+        type: integer
+        required: true
+        description: 1 if messages need to be marked as important, 0 if it is necessary to uncheck
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+  
+  /chats/{chat_id}/messages/markAsRead:
+    put:
+      summary: Marks messages as read
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        required: true
+        type: integer
+        description: ID of chat
+      - in: query
+        name: message_ids
+        type: string
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/my_role:
+    get:
+        summary:
+          Find out your role on the chat
+        tags:
+        - Chats
+        parameters:
+        - in: path
+          name: chat_id
+          type: integer
+          required: true
+          description: Channel ID
+        responses:
+          '200':
+            description: Successfully
+            schema:
+              $ref: "#/definitions/Chat_Role"
+          '400':
+            description: Unsuccessful
+            schema:
+              type: string
+            
+  /chats/{chat_id}/roles:
+    get:
+      summary:
+        Get a list of existing roles
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Chat_Role"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+          Create role
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      - in: body
+        name: role
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 4
+            title:
+              type: string
+              example: Chatterbox
+            name_color:
+              type: string
+              example: "#f0ff32"
+            messages_permissions:
+              type: integer
+              example: 13
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - No access to messages\n
+               1 - Read only\n
+               2 - Write\n
+               3 - Stickers\n
+               4 - Voice messages\n
+               5 - Video messages\n
+               6 - Attach files\n"
+            decoration_permissions:
+              type: integer
+              example: 123
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - Read only\n
+               1 - Editing the chat description\n
+               2 - Editing the chat title\n
+               3 - Editing the chat photo\n
+               4 - Editing the chat shortlink"
+            join_permissions:
+              type: integer
+              example: 1
+              description: 
+               "If the user is forbidden to join the channel, he automatically leaves it\n
+               0 - The user can't join the chat\n
+               1 - The user can join the chat\n"
+            roling_permissions:
+              description: "List of role IDs that a user can assign to other participants. The roles \"owner\", \"user\" and \"banned\" are reserved by default under IDs 0, 1 and 2, respectively"
+              example: [0, 2, 3]
+              type: array
+              items:
+                type: integer
+      responses:
+        '200':
+          description: Successfully, returns new role object
+          schema:
+            $ref: "#/definitions/Chat_Role"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    patch:
+      summary: 
+          Changing the user's role
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      - in: query
+        name: user_id
+        type: integer
+        required: true
+        format: int32
+        description: ID of the user 
+      - in: query
+        name: role_id
+        type: integer
+        description: The id of role
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /chats/{chat_id}/roles/{role_id}:
+    patch:
+      summary: 
+        Edit role
+      tags:
+      - Chats
+      parameters:
+      - in: path
+        name: chat_id
+        type: integer
+        required: true
+      - in: path
+        name: role_id
+        type: integer
+        required: true
+      - in: body
+        name: role
+        description: New role object
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 4
+            title:
+              type: string
+              example: Chatterbox
+            name_color:
+              type: string
+              example: "#f0ff32"
+            messages_permissions:
+              type: integer
+              example: 13
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - No access to messages\n
+               1 - Read only\n
+               2 - Write\n
+               3 - Stickers\n
+               4 - Voice messages\n
+               5 - Video messages\n
+               6 - Attach files\n"
+            decoration_permissions:
+              type: integer
+              example: 123
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - Read only\n
+               1 - Editing the chat description\n
+               2 - Editing the chat title\n
+               3 - Editing the chat photo\n
+               4 - Editing the chat shortlink"
+            join_permissions:
+              type: integer
+              example: 1
+              description: 
+               "If the user is forbidden to join the channel, he automatically leaves it\n
+               0 - The user can't join the chat\n
+               1 - The user can join the chat\n"
+            roling_permissions:
+              description: "List of role IDs that a user can assign to other participants. The roles \"owner\", \"user\" and \"banned\" are reserved by default under IDs 0, 1 and 2, respectively"
+              example: [0, 2, 3]
+              type: array
+              items:
+                type: integer
+      responses:
+        '200':
+          description: Successfully, returns new role object
+          schema:
+            $ref: "#/definitions/Chat_Role"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+  
+#############################################
+##########        CHANNELS          #########
+#############################################
+  
+
+  /channels:
+    get:
+      summary:
+        Get a list of channels that this user is subscribed to
+      tags:
+      - Channels
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        default: 30
+        maximum: 100
+        description: Count of channels
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+        description: Shift from the beginning of the channel list
+      responses:
+        '200':
+          description: Successfully, returns new chennel object
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Channel"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+        Create a channel
+      tags:
+      - Channels
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: query
+        name: title
+        type: string
+        required: true
+        description: Channel name
+      - in: query
+        name: description
+        type: string
+        description: Channel Description 
+      - in: formData
+        name: photo
+        type: file
+      responses:
+        '200':
+          description: Successfully, returns new chennel object
+          schema:
+            $ref: "#/definitions/Channel"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    
+  /channels/{channel_id}:
+    get:
+      summary: 
+          Get info about  channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            $ref: "#/definitions/Channel"
+        '400':
+          description: Unsuccessful
+        '404':
+          description: Channel not found
+    patch:
+      summary: 
+          Edit the information about channel
+      tags:
+      - Channels
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: title
+        type: string
+        description: Channel name
+      - in: query
+        name: description
+        type: string
+        description: Channel description
+      - in: formData
+        name: photo
+        type: file
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: 
+        Delete channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /channels/{channel_id}/join:
+    patch:
+      summary: 
+          Join to a channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            $ref: "#/definitions/Channel"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /channels/{channel_id}/leave:
+    patch:
+      summary: 
+          Leave a channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /channels/{channel_id}/posts:
+    get:
+      summary: 
+          Get posts of channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: post_id
+        type: string
+        description: Id of the newest post available to the client (to receive all posts newer than this one)
+      - in: query
+        name: newer_than
+        type: string
+        format: date-time
+        description: Specify the exact time to receive posts sent later
+      - in: query
+        name: count
+        type: integer
+        description: Count of posts
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            type: array
+            items: 
+              $ref: "#/definitions/Post"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+        Create a post
+      description: 
+        "Comma-separated attachments, in the format {TYPE}{OWNER ID}_{File/Photo/Video/Post ID}"
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        required: true
+        type: integer
+      - in: body
+        name: content
+        schema:
+          type: object
+          properties:
+            text:
+              type: string
+              example: Hello, guys!
+            attachments:
+              type: string
+              example: "doc777000_424242, img777000_191919"
+      responses:
+        '200':
+          description: Successfully, returns new post object
+          schema:
+            $ref: "#/definitions/Post"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    delete:
+      summary: 
+        Delete posts
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: post_ids
+        type: string
+        description: The ID of the posts
+      - in: query
+        name: user_id
+        type: integer
+        format: int32
+        description: ID of the user whose posts need to be deleted
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /channels/{channel_id}/posts/{post_id}:
+    patch:
+      summary: 
+        Edit a post
+      description: 
+        "Comma-separated attachments, in the format {TYPE}{OWNER ID}_{File/Photo/Video/Post ID}"
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        required: true
+        type: integer
+      - in: path
+        name: post_id
+        required: true
+        type: integer
+      - in: body
+        name: content
+        schema:
+          type: object
+          properties:
+            text:
+              type: string
+              example: Hello, guys!
+            attachments:
+              type: string
+              example: "doc777000_424242, img777000_191919"
+      responses:
+        '200':
+          description: Successfully, returns new post object
+          schema:
+            $ref: "#/definitions/Post"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+  /channels/{channel_id}/members:
+    get:
+      summary: 
+          Get members of channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: count
+        type: string
+        description: Number of members
+      - in: query
+        name: offset
+        type: integer
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/User"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    patch:
+      summary: 
+          Invite users to a channel
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: user_ids
+        type: integer
+        format: int32
+        required: true
+        description: IDs of the users
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+ 
+  /channels/{channel_id}/my_role:
+    get:
+        summary:
+          Find out your role on the channel
+        tags:
+        - Channels
+        parameters:
+        - in: path
+          name: channel_id
+          type: integer
+          required: true
+          description: Channel ID
+        responses:
+          '200':
+            description: Successfully
+            schema:
+              $ref: "#/definitions/Channel_Role"
+          '400':
+            description: Unsuccessful
+            schema:
+              type: string
+            
+  /channels/{channel_id}/roles:
+    get:
+      summary:
+        Get a list of existing roles
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      responses:
+        '200':
+          description: Successfully
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Channel_Role"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    post:
+      summary: 
+          Create role
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: body
+        name: role
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+              example: SuperManager
+            name_color:
+              type: string
+              example: "#f0ff32"
+            posts_permissions:
+              type: integer
+              example: 13
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - No access to posts\n
+               1 - Read only\n
+               2 - Editing any posts\n
+               3 - Creating posts\n
+               4 - Deleting posts\n"
+            decoration_permissions:
+              type: integer
+              example: 123
+              description: 
+               "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+               0 - Read only\n
+               1 - Editing the channel description\n
+               2 - Editing the channel title\n
+               3 - Editing the channel photo\n
+               4 - Editing the channel shortlink"
+            join_permissions:
+              type: integer
+              example: 1
+              description: 
+               "If the user is forbidden to join the channel, he automatically leaves it\n
+               0 - The user can't join the channel\n
+               1 - The user can join the channel\n"
+            roling_permissions:
+              description: "List of role IDs that a user can assign to other participants. The roles \"owner\", \"subscriber\" and \"banned\" are reserved by default under IDs 0, 1 and 2, respectively"
+              example: [0, 2, 3]
+              type: array
+              items:
+                type: integer
+      responses:
+        '200':
+          description: Successfully, returns new role object
+          schema:
+            $ref: "#/definitions/Channel_Role"
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+    patch:
+      summary: 
+          Changing the user's role
+      tags:
+      - Channels
+      parameters:
+      - in: path
+        name: channel_id
+        type: integer
+        required: true
+        description: Channel ID
+      - in: query
+        name: user_id
+        type: integer
+        required: true
+        format: int32
+        description: ID of the user 
+      - in: query
+        name: role_id
+        type: integer
+        description: The id of role
+      responses:
+        '200':
+          description: Successfully
+        '400':
+          description: Unsuccessful
+          schema:
+            type: string
+            
+#############################################
+##########          FILES          ##########
+#############################################            
+  
+  /files:
+    get:
+      summary: Get a list of files uploaded to the server by the current user
+      tags:
+      - Files
+      parameters:
+      - in: query
+        name: count
+        type: integer
+        description: Count of files
+        default: 20
+        maximum: 100
+      - in: query
+        name: offset
+        type: integer
+        default: 0
+      responses:
+        '200':
+          description: Successful
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/File"
+    post:
+      summary: Upload the file to the server
+      tags:
+      - Files
+      consumes:
+      - multipart/form-data
+      parameters:
+      - in: query
+        name: title
+        type: string
+      - in: query
+        name: upload_as
+        type: string
+        description: "There are 4 categories of downloadable content available: photo, video, music, file. At the same time, any content that has a separate category can be downloaded as a file."
+      - in: formData
+        name: file
+        type: file
+        required: true
+      responses:
+        '200':
+          description: Successful, returns file_id
+          schema:
+            type: string
+            example: photo777000_000239
+        '400':
+          description: File upload error
+
+  /files/get:
+      get:
+        summary: Get files by id
+        tags:
+        - Files
+        parameters:
+        - in: query
+          name: file_ids
+          type: string
+          description: File IDs separated by commas
+        responses:
+          '200':
+            description: Successful
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/File"
+
+
+# host: nothing.com
+
+schemes:
+ - https
+
+
+definitions:
+
+  User:
+    type: object
+    required:
+    - id
+    - username
+    - firstname
+    - last_time
+    properties:
+      id:
+        type: integer
+        example: 777000
+      username:
+        type: string
+        example: 'vasyanmegadeath'
+        description: Уникальное короткое имя, видное всем
+      firstname:
+        type: string
+        example: 'Вася'
+        description: Имя (может быть не уникальным)
+      lastname:
+        type: string
+        example: 'Пупкин'
+        description: Вторая часть имени (может быть не уникальным)
+      photo:
+        $ref: '#/definitions/Photo'
+      last_time:
+        type: string
+        format: date-time
+        
+  User_list:
+    type: object
+    properties:
+      id: 
+        type: integer
+        example: 2
+      title:
+        type: string
+        example: "Debtors >:/"
+      users_count:
+        type: integer
+        example: 12
+      ban:
+        type: boolean
+        example: 1
+        description: Can users from the list write to you
+      ignore:
+        type: boolean
+        example: 1
+        description: Should the user receive notifications about messages from users from the list
+        
+  Channel_Role:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 4
+      title:
+        type: string
+        example: SuperManager
+      name_color:
+        type: string
+        example: "#f0ff32"
+      posts_permissions:
+        type: integer
+        example: 13
+        description: 
+         "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+         0 - No access to posts\n
+         1 - Read only\n
+         2 - Editing any posts\n
+         3 - Creating posts\n
+         4 - Deleting posts\n"
+      decoration_permissions:
+        type: integer
+        example: 123
+        description: 
+         "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+         0 - Read only\n
+         1 - Editing the channel description\n
+         2 - Editing the channel title\n
+         3 - Editing the channel photo\n
+         4 - Editing the channel shortlink"
+      join_permissions:
+        type: integer
+        example: 1
+        description: 
+         "If the user is forbidden to join the channel, he automatically leaves it\n
+         0 - The user can't join the channel\n
+         1 - The user can join the channel\n"
+      roling_permissions:
+        description: "List of role IDs that a user can assign to other participants. The roles \"owner\", \"subscriber\" and \"banned\" are reserved by default under IDs 0, 1 and 2, respectively"
+        example: [0, 2, 3]
+        type: array
+        items:
+          type: integer
+  
+  Chat_Role:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 4
+      title:
+        type: string
+        example: Chatterbox
+      name_color:
+        type: string
+        example: "#f0ff32"
+      messages_permissions:
+        type: integer
+        example: 13
+        description: 
+         "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+         0 - No access to messages\n
+         1 - Read only\n
+         2 - Write\n
+         3 - Stickers\n
+         4 - Voice messages\n
+         5 - Video messages\n
+         6 - Attach files\n"
+      decoration_permissions:
+        type: integer
+        example: 123
+        description: 
+         "To assign multiple rights, their numeric codes are written in a row without spaces:\n
+         0 - Read only\n
+         1 - Editing the chat description\n
+         2 - Editing the chat title\n
+         3 - Editing the chat photo\n
+         4 - Editing the chat shortlink"
+      join_permissions:
+        type: integer
+        example: 1
+        description: 
+         "If the user is forbidden to join the channel, he automatically leaves it\n
+         0 - The user can't join the chat\n
+         1 - The user can join the chat\n"
+      roling_permissions:
+        description: "List of role IDs that a user can assign to other participants. The roles \"owner\", \"user\" and \"banned\" are reserved by default under IDs 0, 1 and 2, respectively"
+        example: [0, 2, 3]
+        type: array
+        items:
+          type: integer
+  
+  Chat:
+    type: object
+    required:
+    - chat_id
+    - type
+    properties:
+      chat_id:
+        type: integer
+        example: 424242
+      type:
+        type: string
+        example: multichat
+      title:
+        type: string
+        example: GigaChat
+      description:
+        type: string
+        example: The Morse command chat
+      icon:
+        $ref: '#/definitions/Photo'
+      owner_id:
+        type: integer
+        example: 777000
+      users_count:
+        type: integer
+        example: 4201
+        
+    
+  Message:
+    type: object
+    required:
+    - author_id
+    - chat_id
+    properties:
+      message_id:
+        type: integer
+      author_id:
+        type: integer
+      chat_id:
+        type: integer
+      text:
+        type: string
+        example: Привет, Васян!
+      attachments:
+        type: array
+        items:
+          $ref: '#/definitions/Attachment'
+      upload_time:
+        type: string
+        format: date-time
+
+  Post:
+    type: object
+    properties:
+      post_id:
+        type: string
+        example: 777000_043567
+      author_id:
+        type: integer
+        example: 777000
+      channel_id:
+        type: integer
+        example: -123000
+      text:
+        type: string
+        example: Привет, Васян!
+      attachments:
+        type: array
+        items:
+          $ref: '#/definitions/Attachment'
+      upload_time:
+        type: string
+        format: date-time
+        
+  Attachment:
+    type: object
+    properties:
+      type:
+        type: string
+        example: image
+      file_id:
+        type: string
+        example: 777000_000239
+
+
+  Photo:
+    type: object
+    properties:
+      file_id:
+        type: string
+        example: 000239
+      owner_id:
+        type: integer
+        example: 777000
+      byte_size:
+        type: integer
+        example: 2097152
+      media_type:
+        type: string
+        example: photo
+      width:
+        type: integer
+      height:
+        type: integer
+      download_url:
+        type: string
+        example: "nothing.com/otherdata777000_000239"
+      previev_50px:
+        type: string
+        example: "nothing.com/otherdata777000_000239p50"
+        description: Ссылка для скачивания маленького превью 
+      previev_100px:
+        type: string
+        example: "nothing.com/otherdata777000_000239p100"
+        description: Ссылка для скачивания среднего превью
+      previev_200px:
+        type: string
+        example: "nothing.com/otherdata777000_000239p200"
+        description: Ссылка для скачивания большого превью
+      upload_time:
+        type: string
+        format: date-time
+      
+  Video:
+    type: object
+    properties:
+      file_id:
+        type: string
+        example: 000233
+      owner_id:
+        type: integer
+        example: 777000
+      title:
+        type: string
+        example: Super video, watch to the end!
+      byte_size:
+        type: integer
+        example: 2097152
+      duration:
+        type: string
+        example: 115
+        description: Duration in seconds
+      media_type:
+        type: string
+        example: video
+      width:
+        type: integer
+      height:
+        type: integer
+      download_url:
+        type: string
+        example: "nothing.com/otherdata777000_000233"
+      previev:
+        type: string
+        example: "nothing.com/otherdata777000_000233prev"
+        description: Ссылка для скачивания превью-картинки
+      upload_time:
+        type: string
+        format: date-time
+        
+  File:
+    type: object
+    properties:
+      file_id:
+        type: string
+        example: 000222
+      owner_id:
+        type: integer
+        example: 777000
+      title:
+        type: string
+        example: Short course of higher mathematics - Demidovich B.P., Kudryavtsev V.A.
+      byte_size:
+        type: integer
+        example: 2097152
+      media_type:
+        type: string
+        example: file
+      download_url:
+        type: string
+        example: "nothing.com/otherdata000222"
+      upload_time:
+        type: string
+        format: date-time
+      
+  Sound:
+    type: object
+    properties:
+      file_id:
+        type: string
+        example: 000222
+      owner_id:
+        type: integer
+        example: 777000
+      title:
+        type: string
+        example: The unbearable lightness of being
+      author:
+        type: string
+        example: GROB
+      byte_size:
+        type: integer
+        example: 2097152
+      duration:
+        type: string
+        example: 115
+        description: Duration in seconds
+      media_type:
+        type: string
+        example: sound
+      download_url:
+        type: string
+        example: "nothing.com/otherdata000222"
+      upload_time:
+        type: string
+        format: date-time
+      
+  Channel:
+    type: object
+    required:
+    - id
+    - author_id
+    - title
+    properties:
+      id:
+        type: integer
+        example: 777000
+      author_id:
+        type: integer
+        example: 777000
+      title:
+        type: string
+        example: Morse channel
+      description:
+        type: string
+        example: 'Information channel of the "Morse" project'
+      members_count:
+        type: integer
+        example: 1254
+      photo:
+        $ref: '#/definitions/Photo'
+      create_time:
+        type: string
+        format: date-time

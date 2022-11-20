@@ -41,8 +41,24 @@ class UserSettings(ormar.Model):
     user_id: User = ormar.ForeignKey(User)
     settings: pydantic.Json = ormar.JSON()
 
+        
+   
+class Server(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "server"
+    id: int = ormar.Integer(primary_key=True)
+    ip: int = ormar.Integer()
+    port: int = ormar.Integer()
+        
 
-
+class ServerDataDistribution(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "server_data_distribution"
+    id: int = ormar.Integer(primary_key=True)
+    server_id: Server = ormar.ForeignKey(Server)
+    conversation_id: int = ormar.Integer()
+        
+        
 engine = sqlalchemy.create_engine(config.DATABASE_URL)
 metadata.create_all(engine)
 

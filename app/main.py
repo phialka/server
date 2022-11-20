@@ -2,8 +2,9 @@ import uvicorn
 from fastapi import FastAPI
 from routers import profile, users
 from dbmodels import database
+import config
 
-app = FastAPI(title='Phialka')
+app = FastAPI(title=config.SERVER_NAME)
 app.state.database = database
 
 

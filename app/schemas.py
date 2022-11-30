@@ -63,7 +63,3 @@ class User(BaseModel):
     lastname: str
     photo: Photo
     last_time: str
-
-    
-    
-    

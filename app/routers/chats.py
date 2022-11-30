@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 import schemas
 
 chats_router = APIRouter(
@@ -75,7 +75,7 @@ async def leave_chat(chat_id:int):
     return {'status':'OK'}
 
 @chats_router.put('/{chat_id}/photo')
-async def set_chat_photo(chat_id:int, photo: schemas.Photo):
+async def set_chat_photo(chat_id:int, photo: UploadFile):
     return {'status':'OK'}
 
 @chats_router.delete('/{chat_id}/photo')

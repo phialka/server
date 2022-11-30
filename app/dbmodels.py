@@ -102,7 +102,7 @@ class MessageQueue(ormar.Model):
     class Meta(BaseMeta):
         tablename = "message_queues"
     id: int = ormar.Integer(primary_key=True)
-    
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
     message_id: Message = ormar.ForeignKey(Message)
     sender_id: User = ormar.ForeignKey(User)
     recipient_id: User = ormar.ForeignKey(User)

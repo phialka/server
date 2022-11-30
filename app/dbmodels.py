@@ -39,26 +39,26 @@ class UserSettings(ormar.Model):
     settings: pydantic.Json = ormar.JSON()
 
 
-class Conversations(ormar.Model):
+class Conversation(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversations"
     id: int = ormar.Integer(primary_key=True)
     type: str = ormar.String(max_length=100)
     settings: pydantic.Json = ormar.JSON()
-    owner_id: int = ormar.Integer()
+    owner_id: User = ormar.ForeignKey(User)
     created_at: int = ormar.Integer()
     updated_at: int = ormar.Integer()
 
 
-class ConversationUsers(ormar.Model):
+class ConversationUser(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversation_users"
     id: int = ormar.Integer(primary_key=True)
-    conversation_id: int = ormar.Integer()
-    user_id: int = ormar.Integer()
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
+    user_id: User = ormar.ForeignKey(User)
 
 
-class Permissions(ormar.Model):
+class Permission(ormar.Model):
     class Meta(BaseMeta):
         tablename = "permissions"
     id: int = ormar.Integer(primary_key=True)
@@ -66,29 +66,29 @@ class Permissions(ormar.Model):
     descriprion: str = ormar.String(max_length=2000)
 
 
-class ConversationRoles(ormar.Model):
+class ConversationRole(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversation_roles"
     id: int = ormar.Integer(primary_key=True)
     role: str = ormar.String(max_length=100)
 
 
-class RolePermissions(ormar.Model):
+class RolePermission(ormar.Model):
     class Meta(BaseMeta):
         tablename = "role_permissions"
     id: int = ormar.Integer(primary_key=True)
-    role_id: int = ormar.Integer()
-    permission_id: int = ormar.Integer()
+    role_id: ConversationRole = ormar.ForeignKey(ConversationRole)
+    permission_id: Permission = ormar.ForeignKey(Permission)
     value: bool = ormar.Boolean()
 
 
-class ConversationUserRoles(ormar.Model):
+class ConversationUserRole(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "converastion_user_role"
+        tablename = "converastion_user_roles"
     id: int = ormar.Integer(primary_key=True)
-    conversation_id: int = ormar.Integer()
-    role_id: int = ormar.Integer()
-    user_id: int = ormar.Integer()
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
+    role_id: ConversationRole = ormar.ForeignKey(ConversationRole)
+    user_id: ConversationUser = ormar.ForeignKey(ConversationUser)
 
 
 engine = sqlalchemy.create_engine(config.DATABASE_URL)

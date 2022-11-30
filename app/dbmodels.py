@@ -88,7 +88,7 @@ class ConversationUserRole(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
     role_id: ConversationRole = ormar.ForeignKey(ConversationRole)
-    user_id: ConversationUser = ormar.ForeignKey(ConversationUser)
+    user_id: User = ormar.ForeignKey(User)
 
 
 engine = sqlalchemy.create_engine(config.DATABASE_URL)

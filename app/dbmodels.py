@@ -56,7 +56,7 @@ class ServerDataDistribution(ormar.Model):
         tablename = "server_data_distribution"
     id: int = ormar.Integer(primary_key=True)
     server_id: Server = ormar.ForeignKey(Server)
-    conversation_id: = Conversation = ormar.ForeignKey(Conversation)
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
         
         
 engine = sqlalchemy.create_engine(config.DATABASE_URL)

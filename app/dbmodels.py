@@ -48,6 +48,16 @@ class Server(ormar.Model):
     port: int = ormar.Integer()
         
 
+class Conversation(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "conversations"
+    id: int = ormar.Integer(primary_key=True)
+    type: str = ormar.String(max_length=100)
+    settings: pydantic.Json = ormar.JSON()
+    owner_id: User = ormar.ForeignKey(User)
+    created_at: int = ormar.Integer()
+    updated_at: int = ormar.Integer()
+
 
 class ServerDataDistribution(ormar.Model):
     class Meta(BaseMeta):
@@ -123,17 +133,6 @@ class MessageQueue(ormar.Model):
     message_id: Message = ormar.ForeignKey(Message)
     sender_id: User = ormar.ForeignKey(User)
     recipient_id: User = ormar.ForeignKey(User)
-
-      
-class Conversation(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "conversations"
-    id: int = ormar.Integer(primary_key=True)
-    type: str = ormar.String(max_length=100)
-    settings: pydantic.Json = ormar.JSON()
-    owner_id: User = ormar.ForeignKey(User)
-    created_at: int = ormar.Integer()
-    updated_at: int = ormar.Integer()
 
 
 class ConversationUser(ormar.Model):

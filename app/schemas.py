@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 from pydantic import BaseModel
 
 
@@ -17,6 +17,20 @@ class PrivacyOptions(BaseModel):
     audio_call: int
     video_call: int
     forwarding: int
+
+
+class Photo(BaseModel):
+    file_id: int
+    owner_id: int
+    byte_syze: int
+    media_type: str
+    width: int
+    height: int
+    download_url: str
+    previev_50px: str
+    previev_100px: str
+    previev_200px: str
+    upload_time: int
 
 
 class NewUserlist(BaseModel):
@@ -41,7 +55,7 @@ class Post(BaseModel):
     author_id: int
     channel_id: int
     text: str
-    attachments: array
+    attachments: Union[List(str), None] = None
     upload_time: str
         
         
@@ -52,7 +66,7 @@ class ChannelRole(BaseModel):
     posts_permissions: int
     decoration_permissions: int
     join_permissions: int
-    roling_permissions: array
+    roling_permissions: Union[List(str), None] = None
         
         
 class User(BaseModel):
@@ -75,22 +89,9 @@ class ChannelRole(BaseModel):
     posts_permissions: int
     decoration_permissions: int
     join_permissions: int
-    roling_permissions: array
+    roling_permissions: Union[List(str), None] = None
     items: int
 
-
-class Photo(BaseModel):
-    file_id: int
-    owner_id: int
-    byte_syze: int
-    media_type: str
-    width: int
-    height: int
-    download_url: str
-    previev_50px: str
-    previev_100px: str
-    previev_200px: str
-    upload_time: int
 
 
 class ChatCreate(BaseModel):

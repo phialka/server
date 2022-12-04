@@ -8,7 +8,6 @@ import pydantic
 
 database = databases.Database(config.DATABASE_URL)
 metadata = sqlalchemy.MetaData()
-metadata.clear()
 
 class BaseMeta(ormar.ModelMeta):
     metadata = metadata

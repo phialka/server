@@ -8,7 +8,7 @@ import pydantic
 
 database = databases.Database(config.DATABASE_URL)
 metadata = sqlalchemy.MetaData()
-
+metadata.clear()
 
 class BaseMeta(ormar.ModelMeta):
     metadata = metadata
@@ -71,7 +71,7 @@ class Message(ormar.Model):
     class Meta(BaseMeta):
         tablename = "messages"
     id: int = ormar.Integer(primary_key=True)
-    content: str = ormar.String()
+    content: str = ormar.String(max_length=1000)
     created_at: int = ormar.Integer()
     updated_at: int = ormar.Integer()
 
@@ -88,16 +88,16 @@ class Replice(ormar.Model):
     class Meta(BaseMeta):
         tablename = "replices"
     id: int = ormar.Integer(primary_key=True)
-    message_id: Message = ormar.ForeignKey(Message)
-    reply_message_id: Message = ormar.ForeignKey(Message)
+    message_id: Message = ormar.ForeignKey(Message, related_name="answers")
+    reply_message_id: Message = ormar.ForeignKey(Message, related_name="quote")
 
 
 class Forwarded(ormar.Model):
     class Meta(BaseMeta):
         tablename = "forwardes"
     id: int = ormar.Integer(primary_key=True)
-    message_id: Message = ormar.ForeignKey(Message)
-    forwarded_message_id: Message = ormar.ForeignKey(Message)
+    message_id: Message = ormar.ForeignKey(Message, related_name="forwarded")
+    forwarded_message_id: Message = ormar.ForeignKey(Message, related_name="be_forwarded")
 
 
 class View(ormar.Model):
@@ -113,7 +113,7 @@ class Reaction(ormar.Model):
         tablename = "reactions"
     id: int = ormar.Integer(primary_key=True)
     badge: int = ormar.Integer()
-    description: str = ormar.String()
+    description: str = ormar.String(max_length=50)
 
 
 class MessageReaction(ormar.Model):
@@ -131,8 +131,8 @@ class MessageQueue(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
     message_id: Message = ormar.ForeignKey(Message)
-    sender_id: User = ormar.ForeignKey(User)
-    recipient_id: User = ormar.ForeignKey(User)
+    sender_id: User = ormar.ForeignKey(User, related_name="sender_user")
+    recipient_id: User = ormar.ForeignKey(User, related_name="recipient_user")
 
 
 class ConversationUser(ormar.Model):

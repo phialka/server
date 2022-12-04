@@ -37,7 +37,7 @@ class NewUserlist(BaseModel):
     title: str
     ban: bool
     ignore: bool
-    user_ids: Union[None, list[int]]
+    user_ids: Union[None, List[int]]
         
         
 class Channel(BaseModel):
@@ -55,7 +55,7 @@ class Post(BaseModel):
     author_id: int
     channel_id: int
     text: str
-    attachments: Union[List(str), None] = None
+    attachments: Union[List[str], None] = None
     upload_time: str
         
         
@@ -66,7 +66,7 @@ class ChannelRole(BaseModel):
     posts_permissions: int
     decoration_permissions: int
     join_permissions: int
-    roling_permissions: Union[List(str), None] = None
+    roling_permissions: Union[List[str], None] = None
         
         
 class User(BaseModel):
@@ -89,7 +89,7 @@ class ChannelRole(BaseModel):
     posts_permissions: int
     decoration_permissions: int
     join_permissions: int
-    roling_permissions: Union[List(str), None] = None
+    roling_permissions: Union[List[str], None] = None
     items: int
 
 
@@ -129,4 +129,4 @@ class ChatRole(BaseModel):
     messages_permissions: int
     decoration_permissions: int
     join_permissions: int
-    roling_permissions: list[int]
+    roling_permissions: List[int]

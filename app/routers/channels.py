@@ -49,7 +49,7 @@ async def get_posts(channel_id: int, post_id: int, newer_than: str, count: int):
 
 
 @channels_router.post("/{channel_id}/posts")
-async def create_posts(channel_id: int, content: object):
+async def create_posts(channel_id: int, info: schemas.PostContent):
     return {'channel_id':'channel_id'}
 
 
@@ -59,7 +59,7 @@ async def delete_posts(channel_id: int, post_ids: int, user_id: int):
 
 
 @channels_router.patch("/{channel_id}/posts/{post_id}")
-async def edit_posts(channel_id: int, post_id: int, content: object):
+async def edit_posts(channel_id: int, post_id: int, info: schemas.PostContent):
     return {'post_id':'post_id'}
 
 
@@ -84,7 +84,7 @@ async def get_list_roles(channel_id: int):
 
 
 @channels_router.post("/{channel_id}/roles")
-async def create_roles(channel_id: int, role: object):
+async def create_roles(channel_id: int, info: schemas.ChannelRole):
     return {'channel_id':'channel_id'}
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 import schemas
 from controllers import profile_funcs
 
@@ -41,8 +41,8 @@ async def edit_privacy(options: schemas.PrivacyOptions):
 
 
 @profile_router.put("/photo")
-async def edit_profile_photo():
-    return {'status':'OK'}
+async def edit_profile_photo(photo: UploadFile):
+    return {'name':photo.filename, 'type':photo.content_type}
 
 
 @profile_router.get("/user_lists")
@@ -51,7 +51,7 @@ async def get_userlists():
 
 
 @profile_router.post("/user_lists")
-async def create_userlists(userlist: schemas.UserlistIn):
+async def create_userlists(userlist: schemas.NewUserlist):
     return {'status':'OK'}
 
 
@@ -66,12 +66,12 @@ async def getusers_from_userlist(list_id: int):
 
 
 @profile_router.post("/user_lists/{list_id}/users")
-async def addusers_into_userlist(list_id: int):
-    return {'list_id':list_id}
+async def addusers_into_userlist(list_id: int, user_id: int):
+    return {'list_id':list_id, 'user_id':user_id}
 
 
 @profile_router.delete("/user_lists/{list_id}/users")
-async def deleteusers_from_userlist(list_id: int):
-    return {'list_id':list_id}
+async def deleteusers_from_userlist(list_id: int, user_id: int):
+    return {'list_id':list_id, 'user_id':user_id}
 
 

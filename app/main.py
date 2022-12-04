@@ -1,15 +1,17 @@
 import uvicorn
 from fastapi import FastAPI
-from routers import profile, users, channels
+from routers import profile, users, channels, chats
 from dbmodels import database
+import config
 
-app = FastAPI(title='Phialka')
+app = FastAPI(title=config.SERVER_NAME)
 app.state.database = database
 
 
 app.include_router(profile.profile_router)
 app.include_router(users.users_router)
 app.include_router(channels.channels_router)
+app.include_router(chats.chats_router)
 
 
 @app.on_event("startup")

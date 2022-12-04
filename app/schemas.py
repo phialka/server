@@ -63,3 +63,18 @@ class User(BaseModel):
     lastname: str
     photo: Photo
     last_time: str
+
+        
+class PostContent(BaseModel):
+    text: str
+    attachments: str
+        
+
+class ChannelRole(BaseModel):
+    title: str
+    name_color: str
+    posts_permissions: int
+    decoration_permissions: int
+    join_permissions: int
+    roling_permissions: array
+    items: int

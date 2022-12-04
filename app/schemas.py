@@ -2,7 +2,6 @@ from typing import Union
 from pydantic import BaseModel
 
 
-
 class RegistrationInfo(BaseModel):
     nickname: str
     name: str
@@ -20,7 +19,7 @@ class PrivacyOptions(BaseModel):
     forwarding: int
 
 
-class UserlistIn(BaseModel):
+class NewUserlist(BaseModel):
     title: str
     ban: bool
     ignore: bool

@@ -46,7 +46,7 @@ class Post(BaseModel):
     upload_time: str
         
         
-class Channel_Role(BaseModel):
+class ChannelRole(BaseModel):
     id: int
     title: str
     name_color: str

@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from routers import profile, users, chats
+from routers import profile, users, channels, chats
 from dbmodels import database
 import config
 
@@ -10,7 +10,9 @@ app.state.database = database
 
 app.include_router(profile.profile_router)
 app.include_router(users.users_router)
+app.include_router(channels.channels_router)
 app.include_router(chats.chats_router)
+
 
 @app.on_event("startup")
 async def start():

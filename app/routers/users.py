@@ -15,7 +15,7 @@ async def search_users(string: str, offset: Union[int, None] = None, count: Unio
     return {'status':'OK'}
 
 
-@users_router.get("/getID")
+@users_router.get("/get-id")
 async def get_userid(username: str):
     return {'status':'OK'}
 

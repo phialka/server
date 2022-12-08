@@ -25,17 +25,17 @@ async def edit_profile_info(info: schemas.RegistrationInfo):
     return {'status':'OK'}
 
 
-@profile_router.get("/checkUsername")
+@profile_router.get("/check-username")
 async def check_username():
     return {'status':'OK'}
 
 
-@profile_router.get("/privacy_options")
+@profile_router.get("/privacy-options")
 async def get_privacy():
     return {'status':'OK'}
 
 
-@profile_router.patch("/privacy_options")
+@profile_router.patch("/privacy-options")
 async def edit_privacy(options: schemas.PrivacyOptions):
     return {'status':'OK'}
 
@@ -45,32 +45,32 @@ async def edit_profile_photo(photo: UploadFile):
     return {'name':photo.filename, 'type':photo.content_type}
 
 
-@profile_router.get("/user_lists")
+@profile_router.get("/user-lists")
 async def get_userlists():
     return {'status':'OK'}
 
 
-@profile_router.post("/user_lists")
+@profile_router.post("/user-lists")
 async def create_userlists(userlist: schemas.NewUserlist):
     return {'status':'OK'}
 
 
-@profile_router.get("/user_lists/{list_id}")
+@profile_router.get("/user-lists/{list_id}")
 async def get_this_userlist(list_id: int):
     return {'list_id':list_id}
 
 
-@profile_router.get("/user_lists/{list_id}/users")
+@profile_router.get("/user-lists/{list_id}/users")
 async def getusers_from_userlist(list_id: int):
     return {'list_id':list_id}
 
 
-@profile_router.post("/user_lists/{list_id}/users")
+@profile_router.post("/user-lists/{list_id}/users")
 async def addusers_into_userlist(list_id: int, user_id: int):
     return {'list_id':list_id, 'user_id':user_id}
 
 
-@profile_router.delete("/user_lists/{list_id}/users")
+@profile_router.delete("/user-lists/{list_id}/users")
 async def deleteusers_from_userlist(list_id: int, user_id: int):
     return {'list_id':list_id, 'user_id':user_id}
 

@@ -110,11 +110,11 @@ async def unpin_message(chat_id:int, message_id: int):
 async def mark_important_messages(chat_id:int, message_ids: list[int], important: bool):
     return {'status':'OK'}
 
-@chats_router.put('/{chat_id}/messages/mark_as_read')
+@chats_router.put('/{chat_id}/messages/mark-as-read')
 async def mark_read_messages(chat_id:int, message_ids: list[int]):
     return {'status':'OK'}
 
-@chats_router.get('/{chat_id}/my_role')
+@chats_router.get('/{chat_id}/my-role')
 async def get_my_role(chat_id:int):
     return {'status':'OK'}
 

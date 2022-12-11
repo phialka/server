@@ -74,7 +74,7 @@ async def invite_users(channel_id: int, user_ids: int):
     return {'channel_id':'channel_id'}
 
 
-@channels_router.get("/{channel_id}/my_role")
+@channels_router.get("/{channel_id}/my-role")
 async def get_role(channel_id: int):
     return {'channel_id':'channel_id'}
 

@@ -24,6 +24,9 @@ class JWTAuth():
     def jwt_required(self):
         self.auth.jwt_required()
 
+    def jwt_refresh_token_required(self):
+        self.auth.jwt_refresh_token_required()
+
     def create_access_token(self, subject):
         return self.auth.create_access_token(subject=subject)
 

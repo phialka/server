@@ -11,6 +11,11 @@ class RegistrationInfo(BaseModel):
     userpass: str
 
 
+class UserLogin(BaseModel):
+    username: str
+    userpass: str
+
+
 class PrivacyOptions(BaseModel):
     can_found: int
     last_visit: int

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
 import schemas
 from controllers import profile_funcs
+from auth import JWTAuth
 
 profile_router = APIRouter(
     prefix = "/profile",
@@ -22,6 +23,17 @@ async def register(info: schemas.RegistrationInfo):
 
 @profile_router.patch("/")
 async def edit_profile_info(info: schemas.RegistrationInfo):
+    return {'status':'OK'}
+
+
+@profile_router.post("/login")
+async def login(info: schemas.UserLogin, Authorize: JWTAuth = Depends()):
+    return {'status':'OK'}
+
+
+@profile_router.post("/refresh-login")
+async def refresh_login(Authorize: JWTAuth = Depends()):
+    Authorize.jwt_refresh_token_required()
     return {'status':'OK'}
 
 

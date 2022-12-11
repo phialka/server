@@ -16,6 +16,11 @@ class UserLogin(BaseModel):
     userpass: str
 
 
+class UserReset(BaseModel):
+    userpass: str
+    new_pass: str
+
+
 class PrivacyOptions(BaseModel):
     can_found: int
     last_visit: int

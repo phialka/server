@@ -27,13 +27,19 @@ async def edit_profile_info(info: schemas.RegistrationInfo):
 
 
 @profile_router.post("/login")
-async def login(info: schemas.UserLogin, Authorize: JWTAuth = Depends()):
+async def login(login: schemas.UserLogin, Authorize: JWTAuth = Depends()):
     return {'status':'OK'}
 
 
 @profile_router.post("/refresh-login")
 async def refresh_login(Authorize: JWTAuth = Depends()):
     Authorize.jwt_refresh_token_required()
+    return {'status':'OK'}
+
+
+@profile_router.put("/reset-password")
+async def reset_password(reset: schemas.UserReset ,Authorize: JWTAuth = Depends()):
+    Authorize.jwt_required()
     return {'status':'OK'}
 
 

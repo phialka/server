@@ -1,13 +1,14 @@
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi.openapi.utils import get_openapi
 from routers import profile, users, channels, chats
 from dbmodels import database
 import config
 from auth import JWTAuth
+from openapi_documentation import CustomServerAPI
 
 app = FastAPI()
+app.openapi = CustomServerAPI(app).get_openapi()
 app.state.database = database
 
 
@@ -45,47 +46,6 @@ def authjwt_exception_handler(request: Request, exc: JWTAuth.auth_exeption):
         content={"detail": exc.message}
     )
 
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-
-    openapi_schema = get_openapi(
-        title=config.SERVER_NAME,
-        version="alpha",
-        description="Phialka server",
-        routes=app.routes,
-    )
-
-    # Custom documentation fastapi-jwt-auth
-    headers = {
-        "name": "Authorization",
-        "in": "header",
-        "required": True,
-        "schema": {
-            "title": "Authorization",
-            "type": "string"
-        },
-    }
-
-    # Get routes from index 4 because before that fastapi define router for /openapi.json, /redoc, /docs, etc
-    # Get all router where operation_id is authorize
-    router_authorize = [route for route in app.routes[4:] if route.operation_id == "authorize"]
-
-    for route in router_authorize:
-        method = list(route.methods)[0].lower()
-        try:
-            # If the router has another parameter
-            openapi_schema["paths"][route.path][method]['parameters'].append(headers)
-        except Exception:
-            # If the router doesn't have a parameter
-            openapi_schema["paths"][route.path][method].update({"parameters":[headers]})
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)

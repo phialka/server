@@ -1,10 +1,12 @@
-import config
+from typing import Optional
+
 import databases
 import sqlalchemy
 import ormar
-
-from typing import Optional
 import pydantic
+
+import config
+
 
 database = databases.Database(config.DATABASE_URL)
 metadata = sqlalchemy.MetaData()
@@ -18,7 +20,7 @@ class User(ormar.Model):
     class Meta(BaseMeta):
         tablename = "users"
     id: int = ormar.Integer(primary_key=True)
-    username: str = ormar.String(max_length=100)
+    username: str = ormar.String(max_length=100, unique=True)
     userpass: str = ormar.String(max_length=100)
 
 
@@ -38,15 +40,6 @@ class UserSettings(ormar.Model):
     settings: pydantic.Json = ormar.JSON()
 
         
-   
-class Server(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "server"
-    id: int = ormar.Integer(primary_key=True)
-    ip: int = ormar.Integer()
-    port: int = ormar.Integer()
-        
-
 class Conversation(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversations"
@@ -56,6 +49,14 @@ class Conversation(ormar.Model):
     owner_id: User = ormar.ForeignKey(User)
     created_at: int = ormar.Integer()
     updated_at: int = ormar.Integer()
+
+
+class Server(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "server"
+    id: int = ormar.Integer(primary_key=True)
+    ip: int = ormar.Integer()
+    port: int = ormar.Integer()
 
 
 class ServerDataDistribution(ormar.Model):
@@ -175,7 +176,23 @@ class ConversationUserRole(ormar.Model):
     user_id: User = ormar.ForeignKey(User)
 
 
-engine = sqlalchemy.create_engine(config.DATABASE_URL)
-metadata.create_all(engine)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+class File(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "files"
+    id: int = ormar.Integer(primary_key=True)
+    hash: str = ormar.String(max_length=34)
+    info: pydantic.Json = ormar.JSON()
+    path: str = ormar.String(max_length=100)
 
+
+class ConversationsFile(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "conversations_files"
+    id: int = ormar.Integer(primary_key=True)
+    file_id: File = ormar.ForeignKey(File)
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
+
+
+def tables_init():
+    engine = sqlalchemy.create_engine(config.DATABASE_URL)
+    metadata.create_all(engine)

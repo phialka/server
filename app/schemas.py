@@ -2,13 +2,13 @@ from typing import Union, List
 from pydantic import BaseModel
 
 
-class RegistrationInfo(BaseModel):
-    nickname: str
-    name: str
-    description: Union[str, None] = None
-    email: Union[str, None] = None
+class UserRegistration(BaseModel):
     username: str
     userpass: str
+    name: str
+    description: Union[str, None] = None
+    shortname: Union[str, None] = None
+    email: Union[str, None] = None
 
 
 class UserLogin(BaseModel):

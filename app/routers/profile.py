@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, Depends
 import schemas
-from controllers import profile_funcs
+from controllers import profile_logic, files_logic
 from auth import JWTAuth
 
 profile_router = APIRouter(
@@ -10,25 +10,25 @@ profile_router = APIRouter(
 
 
 @profile_router.get("/")
-async def get_profile_info():
-    info = await profile_funcs.get_info()
+async def get_profile_info(auth: JWTAuth = Depends()):
+    info = await profile_logic.get_info()
     return info
 
 
 @profile_router.post("/")
-async def register(info: schemas.RegistrationInfo):
-    await profile_funcs.reg_profile(info)
-    return {'status':'OK'}
+async def register(user: schemas.UserRegistration):
+    return await profile_logic.reg_profile(user)
+    
 
 
 @profile_router.patch("/")
-async def edit_profile_info(info: schemas.RegistrationInfo):
+async def edit_profile_info(info: schemas.UserRegistration):
     return {'status':'OK'}
 
 
 @profile_router.post("/login")
-async def login(login: schemas.UserLogin, Authorize: JWTAuth = Depends()):
-    return {'status':'OK'}
+async def login(login: schemas.UserLogin):
+    return await profile_logic.login_user(login)
 
 
 @profile_router.post("/refresh-login")
@@ -60,7 +60,8 @@ async def edit_privacy(options: schemas.PrivacyOptions):
 
 @profile_router.put("/photo")
 async def edit_profile_photo(photo: UploadFile):
-    return {'name':photo.filename, 'type':photo.content_type}
+    file = await files_logic.save_to_server(photo)
+    return file.info
 
 
 @profile_router.get("/user-lists")

@@ -1,9 +1,11 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
 import schemas
+from auth import JWTAuth
 
 chats_router = APIRouter(
     prefix = "/chats",
-    tags = ["chats"]
+    tags = ["chats"],
+    dependencies = [Depends(JWTAuth.auth_scheme)]
 )
 
 @chats_router.get('/')

@@ -10,6 +10,6 @@ files_router = APIRouter(
 )
 
 
-@files_router.get("/{file_hash}")
+@files_router.get("/{file_hash}", include_in_schema=False)
 async def download_file(file_hash: str):
     return await files_logic.get_file(file_hash)

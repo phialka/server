@@ -1,18 +1,20 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi import Request, Response
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from pydantic import BaseModel
+from fastapi.security import HTTPBearer
 
 import config
+
 
 #class-adapter for authorization using JWT
 class JWTAuth():
     auth_mainclass = AuthJWT
     auth_exeption = AuthJWTException
+    auth_scheme = HTTPBearer(scheme_name='JWT access token')
 
-    def __init__(self):
-        self.auth = AuthJWT()
+    def __init__(self, req: Request = None, res: Response = None):
+        self.auth = AuthJWT(req, res)
 
     @classmethod
     def load_settings(cls, settings: BaseModel):

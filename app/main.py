@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from routers import profile, users, channels, chats, files
+from routers import profile, users, channels, chats, files, authentification
 from dbmodels import database, tables_init
 import config
 from auth import JWTAuth
@@ -15,6 +15,7 @@ app.openapi = CustomServerAPI(app).get_openapi()
 app.state.database = database
 
 
+app.include_router(authentification.auth_router)
 app.include_router(profile.profile_router)
 app.include_router(users.users_router)
 app.include_router(channels.channels_router)

@@ -8,7 +8,7 @@ from auth import JWTAuth
 
 auth_router = APIRouter(
     prefix = "/auth",
-    tags = ["authentification"]
+    tags = ["auth"]
 )
 
 

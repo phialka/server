@@ -2,6 +2,16 @@ from typing import Union, List
 from pydantic import BaseModel
 
 
+class Photo(BaseModel):
+    file_id: int
+    byte_syze: int
+    media_type: str
+    width: int
+    height: int
+    url: str
+    upload_at: int
+
+
 class UserRegistration(BaseModel):
     username: str
     userpass: str
@@ -21,26 +31,21 @@ class UserReset(BaseModel):
     new_pass: str
 
 
+class User(BaseModel):
+    id: int
+    name: str
+    shortname: str
+    descriptiion: str
+    photo: Photo
+    last_time: str
+
+
 class PrivacyOptions(BaseModel):
     can_found: int
     last_visit: int
     audio_call: int
     video_call: int
     forwarding: int
-
-
-class Photo(BaseModel):
-    file_id: int
-    owner_id: int
-    byte_syze: int
-    media_type: str
-    width: int
-    height: int
-    download_url: str
-    previev_50px: str
-    previev_100px: str
-    previev_200px: str
-    upload_time: int
 
 
 class NewUserlist(BaseModel):
@@ -78,15 +83,6 @@ class ChannelRole(BaseModel):
     join_permissions: int
     roling_permissions: Union[List[str], None] = None
         
-        
-class User(BaseModel):
-    id: int
-    username: str
-    firstname: str
-    lastname: str
-    photo: Photo
-    last_time: str
-
         
 class PostContent(BaseModel):
     text: str

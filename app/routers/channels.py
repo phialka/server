@@ -1,11 +1,13 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Depends
+from auth import JWTAuth
 
 import schemas
 
 
 channels_router = APIRouter(
     prefix = "/channels",
-    tags = ["channels"]
+    tags = ["channels"],
+    dependencies = [Depends(JWTAuth.auth_scheme)]
 )
 
 

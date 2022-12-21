@@ -1,12 +1,13 @@
-from fastapi import APIRouter
-import schemas
+from fastapi import APIRouter,  Depends
 from typing import Union
 
-
+from auth import JWTAuth
+import schemas
 
 users_router = APIRouter(
     prefix = "/users",
-    tags = ["users"]
+    tags = ["users"],
+    dependencies = [Depends(JWTAuth.auth_scheme)]
 )
 
 

@@ -5,35 +5,25 @@ from auth import JWTAuth
 
 profile_router = APIRouter(
     prefix = "/profile",
-    tags = ["profile"]
+    tags = ["profile"],
+    dependencies = [Depends(JWTAuth.auth_scheme)]
 )
 
 
 @profile_router.get("/")
-async def get_profile_info(auth: JWTAuth = Depends()):
-    info = await profile_logic.get_info()
-    return info
+async def get_profile_info(authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    return await profile_logic.get_profile(authorize.get_jwt_subject())
 
 
-@profile_router.post("/")
+
+@profile_router.post("/", status_code=201)
 async def register(user: schemas.UserRegistration):
     return await profile_logic.reg_profile(user)
     
 
-
 @profile_router.patch("/")
 async def edit_profile_info(info: schemas.UserRegistration):
-    return {'status':'OK'}
-
-
-@profile_router.post("/login")
-async def login(login: schemas.UserLogin):
-    return await profile_logic.login_user(login)
-
-
-@profile_router.post("/refresh-login")
-async def refresh_login(Authorize: JWTAuth = Depends()):
-    Authorize.jwt_refresh_token_required()
     return {'status':'OK'}
 
 

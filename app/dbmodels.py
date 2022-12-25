@@ -1,8 +1,10 @@
-from typing import Optional
+from typing import Optional, Union
+import json
 
 import databases
 import sqlalchemy
 import ormar
+from ormar import property_field
 import pydantic
 
 import config
@@ -16,6 +18,43 @@ class BaseMeta(ormar.ModelMeta):
     database = database
 
 
+class PhotoTypeInfo(pydantic.BaseModel):
+    width: int
+    height: int
+
+
+class VideoTypeInfo(pydantic.BaseModel):
+    width: int
+    height: int
+    duration: int
+
+
+class AudioTypeInfo(pydantic.BaseModel):
+    duration: int
+
+
+class FileInfoField(pydantic.BaseModel):
+    type: str
+    title: str
+    size: int
+    upload_at: int
+    type_info: Union[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo, None]
+    url: str
+
+
+class File(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "files"
+    id: int = ormar.Integer(primary_key=True)
+    hash: str = ormar.String(max_length=34)
+    info: pydantic.Json[FileInfoField] = ormar.JSON()
+    path: str = ormar.String(max_length=100)
+
+    @property
+    def prepared_info(self) -> FileInfoField:
+        return FileInfoField(**self.info)
+
+
 class User(ormar.Model):
     class Meta(BaseMeta):
         tablename = "users"
@@ -24,12 +63,24 @@ class User(ormar.Model):
     userpass: str = ormar.String(max_length=100)
 
 
+class UserInfoField(pydantic.BaseModel):
+    name: str
+    shortname: str
+    description: Optional[str] = None
+    email: Optional[pydantic.EmailStr] = None
+    photo: Optional[FileInfoField] = None
+
+
 class UserInfo(ormar.Model):
     class Meta(BaseMeta):
         tablename = "user_info"
     id: int = ormar.Integer(primary_key=True)
     user_id: User = ormar.ForeignKey(User)
-    info: pydantic.Json = ormar.JSON()
+    info: pydantic.Json[UserInfoField] = ormar.JSON()
+
+    @property
+    def prepared_info(self) -> UserInfoField:
+        return UserInfoField(**self.info)
 
 
 class UserSettings(ormar.Model):
@@ -53,7 +104,7 @@ class Conversation(ormar.Model):
 
 class Server(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "server"
+        tablename = "servers"
     id: int = ormar.Integer(primary_key=True)
     ip: int = ormar.Integer()
     port: int = ormar.Integer()
@@ -174,15 +225,6 @@ class ConversationUserRole(ormar.Model):
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
     role_id: ConversationRole = ormar.ForeignKey(ConversationRole)
     user_id: User = ormar.ForeignKey(User)
-
-
-class File(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "files"
-    id: int = ormar.Integer(primary_key=True)
-    hash: str = ormar.String(max_length=34)
-    info: pydantic.Json = ormar.JSON()
-    path: str = ormar.String(max_length=100)
 
 
 class ConversationsFile(ormar.Model):

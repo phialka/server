@@ -8,7 +8,7 @@ import config
 from auth import JWTAuth
 from openapi_documentation import CustomServerAPI
 
-import controllers
+from controllers.files_logic import Storage
 
 app = FastAPI()
 app.openapi = CustomServerAPI(app).get_openapi()
@@ -17,6 +17,7 @@ app.state.database = database
 
 app.include_router(authentification.auth_router)
 app.include_router(profile.profile_router)
+app.include_router(profile.unauth_router)
 app.include_router(users.users_router)
 app.include_router(channels.channels_router)
 app.include_router(chats.chats_router)
@@ -29,7 +30,7 @@ async def start():
     if not database_.is_connected:
         await database_.connect()
     tables_init()
-    #controllers.files.create_storage()
+    #Storage.create_storage()
 
 
 @app.on_event("shutdown")

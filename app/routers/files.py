@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from controllers import files_logic
-
+from controllers.files_logic import Storage
 
 
 files_router = APIRouter(
@@ -12,4 +11,4 @@ files_router = APIRouter(
 
 @files_router.get("/{file_hash}", include_in_schema=False)
 async def download_file(file_hash: str):
-    return await files_logic.get_file(file_hash)
+    return await Storage.get_file(file_hash)

@@ -1,12 +1,18 @@
-from fastapi import APIRouter, UploadFile, Depends
+from fastapi import APIRouter, UploadFile, Depends, Form
 import schemas
-from controllers import profile_logic, files_logic
+from controllers import profile_logic
+from controllers.files_logic import Storage
 from auth import JWTAuth
 
 profile_router = APIRouter(
     prefix = "/profile",
     tags = ["profile"],
     dependencies = [Depends(JWTAuth.auth_scheme)]
+)
+
+unauth_router = APIRouter(
+    prefix = "/profile",
+    tags = ["profile"]
 )
 
 
@@ -16,8 +22,7 @@ async def get_profile_info(authorize: JWTAuth = Depends()):
     return await profile_logic.get_profile(authorize.get_jwt_subject())
 
 
-
-@profile_router.post("/", status_code=201)
+@unauth_router.post("/", status_code=201)
 async def register(user: schemas.UserRegistration):
     return await profile_logic.reg_profile(user)
     
@@ -28,8 +33,8 @@ async def edit_profile_info(info: schemas.UserRegistration):
 
 
 @profile_router.put("/reset-password")
-async def reset_password(reset: schemas.UserReset ,Authorize: JWTAuth = Depends()):
-    Authorize.jwt_required()
+async def reset_password(reset: schemas.UserReset, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
     return {'status':'OK'}
 
 
@@ -49,9 +54,10 @@ async def edit_privacy(options: schemas.PrivacyOptions):
 
 
 @profile_router.put("/photo")
-async def edit_profile_photo(photo: UploadFile):
-    file = await files_logic.save_to_server(photo)
-    return file.info
+async def edit_profile_photo(photo: UploadFile, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    user_id = authorize.get_jwt_subject()
+    return await profile_logic.set_profile_photo(user_id, photo)
 
 
 @profile_router.get("/user-lists")

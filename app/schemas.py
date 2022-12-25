@@ -1,5 +1,5 @@
-from typing import Union, List
-from pydantic import BaseModel
+from typing import Union, List, Optional
+from pydantic import BaseModel, EmailStr
 
 
 class Photo(BaseModel):
@@ -16,9 +16,9 @@ class UserRegistration(BaseModel):
     username: str
     userpass: str
     name: str
-    description: Union[str, None] = None
-    shortname: Union[str, None] = None
-    email: Union[str, None] = None
+    description: Optional[str]
+    shortname: str
+    email: Optional[EmailStr]
 
 
 class UserLogin(BaseModel):

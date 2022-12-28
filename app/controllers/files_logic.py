@@ -21,7 +21,7 @@ class SavedFile():
         self.file_in_db: File
         self.__size: int 
         self.__hash: str 
-        self.__info: str
+        self.__info: FileInfoField
     
     @property
     def type(self) -> str:
@@ -67,7 +67,7 @@ class SavedFile():
         return size
 
 
-    async def __create_typeinfo(self) -> Union[dict, None]:
+    async def __create_typeinfo(self) -> Union[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo, None]:
         """
         Creates a type_info object specific to files of different types.
         """
@@ -76,19 +76,19 @@ class SavedFile():
         if mimetype[0] == "image":
             image = Image.open(self.file)
             width, height = image.size
-            return {"width": width, "height": height}
+            return PhotoTypeInfo(width=width, height=height)
         return None
 
     
-    async def __create_info(self) -> dict:
-        info = {
-            "type": self.type,
-            "title": self.name,
-            "size": self.size,
-            "upload_at": time.time(),
-            "type_info": await self.__create_typeinfo(),
-            "url": f"http://{config.HOST}:{config.PORT}/file/{self.hash}"
-        }
+    async def __create_info(self) -> FileInfoField:
+        info = FileInfoField(
+            type = self.type,
+            title = self.name,
+            size = self.size,
+            upload_at = time.time(),
+            type_info = await self.__create_typeinfo(),
+            url = f"http://{config.HOST}:{config.PORT}/file/{self.hash}"
+        )
         return info
 
 
@@ -109,7 +109,7 @@ class SavedFile():
         with open(f"{path}\{self.hash}", "wb") as new_file:
             self.file.seek(0,0)
             new_file.write(self.file.read())
-        self.file_in_db = await File.objects.create(hash=self.hash, info=self.info, path=path)
+        self.file_in_db = await File.objects.create(hash=self.hash, info=self.info.json(), path=path)
         return self
 
 

@@ -33,8 +33,8 @@ async def register(reg: User.Registration):
 async def edit_profile_info(info: User.EditInfo, authorize: JWTAuth = Depends()):
     authorize.jwt_required()
     user_id = authorize.get_jwt_subject()
-    pass
-
+    new_user = await ServerUser(user_id).edit_info(info)
+    return await new_user.view
 
 
 @profile_router.put("/reset-password")
@@ -48,14 +48,18 @@ async def check_username(username: str):
     return await UserController.check_username_isfree(username)
 
 
-@profile_router.get("/privacy-options")
-async def get_privacy():
-    return {'status':'OK'}
+@profile_router.get("/privacy-options", response_model=User.PrivacyOptions)
+async def get_privacy(authorize: JWTAuth = Depends()):
+    user_id = authorize.get_jwt_subject()
+    return await ServerUser(user_id).privacy_options
 
 
 @profile_router.patch("/privacy-options")
-async def edit_privacy(options: User.PrivacyOptions):
-    return {'status':'OK'}
+async def edit_privacy(options: User.EditSettings, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    user_id = authorize.get_jwt_subject()
+    new_user = await ServerUser(user_id).edit_privacy_settings(options)
+    return await new_user.privacy_options
 
 
 @profile_router.put("/photo")

@@ -56,18 +56,41 @@ class User():
 
 
     class EditInfo(BaseModel):
+        """
+        scheme for validating user request for editing profile info
+        """
         name: Optional[str]
         description: Optional[str]
         shortname: Optional[str]
         email: Optional[EmailStr]
 
+    
+    class EditSettings(BaseModel):
+        """
+        scheme for validating user request for editing profile info
+        """
+        online_display: Optional[str]
+        profile_photo_display: Optional[str]
+        personal_messages_resend: Optional[str]
+        can_write: Optional[str]
+        mentions: Optional[str]
+        add_to_chats: Optional[str]
+        add_to_channels: Optional[str]
+        can_find: Optional[str]
+
 
     class PrivacyOptions(BaseModel):
-        can_found: int
-        last_visit: int
-        audio_call: int
-        video_call: int
-        forwarding: int
+        """
+        The User's PrivacyOptions object in the api view (response model)
+        """
+        online_display: str
+        profile_photo_display: str
+        personal_messages_resend: str
+        can_write: str
+        mentions: str
+        add_to_chats: str 
+        add_to_channels: str 
+        can_find: str 
     
 
     class View(BaseModel):

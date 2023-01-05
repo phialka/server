@@ -14,7 +14,9 @@ from controllers.files_logic import Storage, SavedFile
 class UList():
     def __init__(self, ) -> None:
         self.__dbuserlist: UserList
-        self.__dbusers: List[ServerUser]     
+
+        self.__users: List[ServerUser]   
+
         self.__view: schemas.UserList.View
 
     @property
@@ -52,12 +54,19 @@ class ServerUser():
         self.__settings: UserSettings.Settings
 
         self.__view: schemas.User.View
+        self.__privacy_options_view: schemas.User.PrivacyOptions
 
     @property
     async def view(self):
         await self.__init_user()
         await self.__init_info()
         return (await self.__create_view()).__view
+
+    @property
+    async def privacy_options(self):
+        await self.__init_user()
+        await self.__init_settings()
+        return (await self.__create_privacy_options_view()).__privacy_options_view
 
     async def __init_user(self):
         self.__dbuser = await User.objects.filter(User.id == self.id).get_or_none()
@@ -72,8 +81,22 @@ class ServerUser():
         self.__settings = self.__dbsettings.settings_
 
     async def __update_info(self, **kwargs):
-        self.__info = UserInfo.Info(**{arg[0]:arg[1] for arg in self.__info.dict().items() if arg[0] not in kwargs}, **kwargs)
-
+        separate_kwargs = {karg[0]:karg[1] for karg in kwargs.items() if karg[1] != None}
+        self.__info = UserInfo.Info(
+            **{arg[0]:arg[1] for arg in self.__info.dict().items() if arg[0] not in separate_kwargs}, 
+            **separate_kwargs #a dubious decision. it will not allow assigning the value None to some parameters
+            )
+    
+    async def __update_privacy_settings(self, **kwargs):
+        def separator(unsep_dict: dict):
+           return {karg[0]:karg[1] for karg in unsep_dict.items() if karg[1] != None}
+        
+        separate_kwargs = separator(kwargs)
+        self.__settings = UserSettings.Settings(
+            privacy_settings = UserSettings.Settings.PrivacySettings(
+                **{arg[0]:arg[1] for arg in self.__settings.dict().items() if arg[0] not in separate_kwargs}, 
+                **separate_kwargs #a dubious decision. it will not allow assigning the value None to some parameters
+            ))
 
     async def __create_view(self):
         if self.__info.photo_file_id:
@@ -91,6 +114,18 @@ class ServerUser():
         )
         return self
 
+    async def __create_privacy_options_view(self):
+        self.__privacy_options_view = schemas.User.PrivacyOptions(
+            online_display = self.__settings.privacy_settings.online_display,
+            profile_photo_display = self.__settings.privacy_settings.profile_photo_display,
+            personal_messages_resend = self.__settings.privacy_settings.personal_messages_resend,
+            can_write = self.__settings.privacy_settings.can_write,
+            mentions = self.__settings.privacy_settings.mentions,
+            add_to_chats = self.__settings.privacy_settings.add_to_chats,
+            add_to_channels = self.__settings.privacy_settings.add_to_channels,
+            can_find = self.__settings.privacy_settings.can_find
+        )
+        return self
     
     async def create(self, reg: schemas.User.Registration):
         @database.transaction()
@@ -120,40 +155,26 @@ class ServerUser():
         return self
 
 
+    async def edit_info(self, new_info: schemas.User.EditInfo):
+        await self.__init_info()
+        await self.__update_info(**new_info.dict())
+        await UserInfo.objects.filter(UserInfo.user_id.id == self.__dbinfo.user_id).update(info = self.__info.json())
+        return self
+
+
+    async def edit_privacy_settings(self, new_settings: schemas.User.EditSettings):
+        await self.__init_settings()
+        await self.__update_privacy_settings(**new_settings.dict())
+        await UserSettings.objects.filter(UserSettings.user_id.id == self.__dbsettings.user_id).update(settings = self.__settings.json())
+        return self
+
+
     async def set_photo(self, photo: UploadFile):
         await self.__init_info()
         file = await (await SavedFile().save(photo)).view
         await self.__update_info(photo_file_id = file.file_id)
         await UserInfo.objects.filter(UserInfo.user_id.id == self.id).update(info = self.__info.json())
         return file
-
-
-    async def _get_user_settings(self, user_id):
-        self.id = user_id
-        uset = await UserSettings.objects.get_or_none(user_id=self.id)
-        self.settings = uset.settings_
-        return self
-
-
-    async def _get_userlists(self) -> List[UList]:
-        return await UserList.objects.filter(owner_id = self.id).exclude_fields("owner_id").all()
-
-    
-    async def create_conversation_list(self, list_schema: schemas.ConversationList.Create):
-        notify_settings = UserList.Settings.NotificationSettings(**list_schema.notifications)
-        await UserList.objects.create(owner_id=self.id, title=list_schema.title, notify_settings=notify_settings.json())
-
-
-    async def edit_profile_info(self, info: schemas.User.EditInfo):
-        old_uinfo = await UserInfo.objects.get_or_none(user_id=self.id)
-        old_info = old_uinfo.info_.dict()
-
-        for key in info.dict().keys():
-            if info.dict()[key]!=None:
-                old_info[key] = info.dict()[key]
-        
-        await UserInfo.objects.filter(UserInfo.user_id.id == self.id).update(info=old_info)
-        return old_info
 
 
 

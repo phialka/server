@@ -10,42 +10,59 @@ from PIL import Image
 
 from dbmodels import *
 import config
-
+import schemas
 
 
 class SavedFile():
-    def __init__(self, file: UploadFile) -> None:
-        self.__type: str = file.content_type
-        self.__name = file.filename
-        self.__file: BinaryIO = file.file
-        self.file_in_db: File
-        self.__size: int 
-        self.__hash: str 
-        self.__info: FileInfoField
-    
-    @property
-    def type(self) -> str:
-        return self.__type
+    def __init__(self, id: Optional[int] = None) -> None:
+        self.id: int
+        if id:
+            self.id = id
+        self.__file: BinaryIO
+        self.__hash: str
+        self.__info: File.Info
 
-    @property
-    def name(self) -> str:
-        return self.__name
+        self.__dbfile: File
+
+        self.__view: Union[schemas.Photo, schemas.Video, schemas.Audio]
 
     @property
     def file(self) -> BinaryIO:
         return self.__file
 
     @property
-    def size(self) -> int:
-        return self.__size
+    def dbfile(self):
+        return self.__dbfile
 
     @property
-    def hash(self) -> str:
-        return self.__hash
+    async def view(self):
+        await self.__init_file()
+        return (await self._create_view()).__view
 
-    @property
-    def info(self) -> FileInfoField:
-        return self.__info
+
+    async def __init_file(self):
+        self.__dbfile = await File.objects.filter(File.id == self.id).get_or_none()
+        self.__info = self.__dbfile.info_
+
+    
+    async def _create_view(self):
+        filedata = schemas.File(
+            file_id=self.__dbfile.id,
+            byte_syze=self.__info.size,
+            media_type=self.__info.type,
+            url=self.__info.url,
+            upload_at=self.__info.upload_at
+        )
+        mimetype = filedata.media_type.split("/")
+        if mimetype[0] == "image":
+            self.__view = schemas.Photo(
+                **filedata.dict(),
+                width=self.__info.type_info.width,
+                height=self.__info.type_info.height
+            )
+        else:
+            self.__view = schemas.File(**filedata.dict())
+        return self
 
 
     async def __calculate_hash(self) -> str:
@@ -67,11 +84,11 @@ class SavedFile():
         return size
 
 
-    async def __create_typeinfo(self) -> Union[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo, None]:
+    async def __create_typeinfo(self, file: UploadFile) -> Union[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo, None]:
         """
         Creates a type_info object specific to files of different types.
         """
-        mimetype = (self.type).split("/")
+        mimetype = (file.content_type).split("/")
 
         if mimetype[0] == "image":
             image = Image.open(self.file)
@@ -80,36 +97,36 @@ class SavedFile():
         return None
 
     
-    async def __create_info(self) -> FileInfoField:
-        info = FileInfoField(
-            type = self.type,
-            title = self.name,
-            size = self.size,
+    async def __create_info(self, file: UploadFile) -> File.Info:
+        info = File.Info(
+            type = file.content_type,
+            title = file.filename,
+            size = await self.__get_filesize(),
             upload_at = time.time(),
-            type_info = await self.__create_typeinfo(),
-            url = f"http://{config.HOST}:{config.PORT}/file/{self.hash}"
+            type_info = await self.__create_typeinfo(file),
+            url = f"http://{config.HOST}:{config.PORT}/file/{self.__hash}"
         )
         return info
 
 
-    async def save(self):
+    async def save(self, file: UploadFile):
+        self.__file = file.file
         self.__hash = await self.__calculate_hash()
 
-        file_already_saved = await File.objects.get_or_none(hash=self.hash)
+        file_already_saved = await File.objects.get_or_none(hash = self.__hash)
         if file_already_saved:
-            self.file_in_db = file_already_saved
-            self.__info = file_already_saved.prepared_info
-            self.__size = self.info.size
+            self.__dbfile = file_already_saved
+            self.id = self.__dbfile.id
+            self.__info = self.__dbfile.info_
             return self
-
-        self.__size = await self.__get_filesize()
-        self.__info = await self.__create_info()
-
-        path = f'{config.FILE_STORAGE}\{self.hash[0:2]}\{self.hash[2:4]}'
-        with open(f"{path}\{self.hash}", "wb") as new_file:
+        
+        info = await self.__create_info(file)
+        path = f'{config.FILE_STORAGE}\{self.__hash[0:2]}\{self.__hash[2:4]}'
+        self.__dbfile = await File.objects.create(hash=self.__hash, info=info.json(), path=path)
+        
+        with open(f"{path}\{self.__hash}", "wb") as new_file:
             self.file.seek(0,0)
             new_file.write(self.file.read())
-        self.file_in_db = await File.objects.create(hash=self.hash, info=self.info.json(), path=path)
         return self
 
 
@@ -139,12 +156,11 @@ class Storage():
         """
         Saves the uploaded file to the storage, registers it in the database
         """
-        sfile = SavedFile(file)
-        return await sfile.save()
+        return await SavedFile().save(file)
     
 
     @classmethod
-    async def get_file(cls, file_hash: str) -> Response:
+    async def download_file(cls, file_hash: str) -> Response:
         """
         Returns the Response object with the uploaded file
         """

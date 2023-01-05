@@ -48,7 +48,7 @@ class File(ormar.Model):
     path: str = ormar.String(max_length=100)
 
     @property
-    def prepared_info(self) -> Info:
+    def info_(self) -> Info:
         return File.Info(**self.info)
 
 
@@ -70,14 +70,15 @@ class UserInfo(ormar.Model):
         shortname: str
         description: Optional[str]
         email: Optional[pydantic.EmailStr]
-        photo: Optional[File.Info]
+        photo_file_id: Optional[int]
+        last_visit: int
 
     id: int = ormar.Integer(primary_key=True)
     user_id: User = ormar.ForeignKey(User)
     info: pydantic.Json[Info] = ormar.JSON()
 
     @property
-    def prepared_info(self) -> Info:
+    def info_(self) -> Info:
         return UserInfo.Info(**self.info)
 
 
@@ -104,7 +105,7 @@ class UserSettings(ormar.Model):
     settings: pydantic.Json = ormar.JSON()
 
     @property
-    def prepared_settings(self) -> Settings:
+    def settings_(self) -> Settings:
         return UserSettings.Settings(**self.settings)
 
 
@@ -131,7 +132,7 @@ class UserList(ormar.Model):
     settings: pydantic.Json = ormar.JSON()
 
     @property
-    def prepared_settings(self) -> Settings:
+    def settings_(self) -> Settings:
         return UserList.Settings(**self.settings)
 
 

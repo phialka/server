@@ -5,7 +5,7 @@ from auth import JWTAuth
 
 
 
-async def login_user(user: schemas.UserLogin) -> dict:
+async def login_user(user: schemas.User.Login) -> dict:
     """
     Creates an access/refresh_token pair for the specified user. 
     The token contains the user ID.

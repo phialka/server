@@ -1,16 +1,32 @@
 from typing import Union, List, Optional
 from pydantic import BaseModel, EmailStr
-from dbmodels import NotificationSettings
 
 
-class Photo(BaseModel):
+class File(BaseModel):
     file_id: int
     byte_syze: int
     media_type: str
-    width: int
-    height: int
     url: str
     upload_at: int
+
+class Photo(File):
+    width: int
+    height: int
+        
+class Video(File):
+    width: int
+    height: int
+    duration: int
+
+class Audio(File):
+    duration: int
+
+
+class NotificationSettings(BaseModel):
+            messages: bool = True
+            references: bool = True
+            reactions: bool = True
+            answers: bool = True
 
 
 class User():
@@ -54,25 +70,25 @@ class User():
         forwarding: int
     
 
-    class Info(BaseModel):
+    class View(BaseModel):
         """
         The UserInfo object in the api view (response model)
         """
         id: int
         name: str
         shortname: str
-        descriptiion: str
-        photo: Photo
-        last_time: str
+        descriptiion: Optional[str]
+        photo: Optional[Photo]
+        last_time: int
 
-    
+
 
 class UserList(BaseModel):
     class Create(BaseModel):
         title: str
         ban: bool = False
         notification_settings: NotificationSettings
-        user_ids: Union[None, List[int]]
+        user_ids: Optional[List[int]]
 
 
     class View(BaseModel):
@@ -87,11 +103,13 @@ class UserList(BaseModel):
         settings: Settings
 
         
+
 class ConversationList(BaseModel):
     class Create(BaseModel):
         title: str
         notification_settings: NotificationSettings
         conversation_ids: Union[None, List[int]]
+
 
 
 class Channel(BaseModel):

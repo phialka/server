@@ -6,7 +6,6 @@ from fastapi.security import HTTPBearer
 
 import config
 
-
 #class-adapter for authorization using JWT
 class JWTAuth():
     auth_mainclass = AuthJWT

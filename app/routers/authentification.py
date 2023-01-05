@@ -13,7 +13,7 @@ auth_router = APIRouter(
 
 
 @auth_router.post("/login")
-async def login(login: schemas.UserLogin):
+async def login(login: schemas.User.Login):
     return await auth_logic.login_user(login)
 
 

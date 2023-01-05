@@ -105,6 +105,13 @@ class User():
         last_time: int
 
 
+class Search():
+    class Users(BaseModel):
+        """
+        List of users who meet the search criteria (response model)
+        """
+    
+
 
 class UserList(BaseModel):
     class Create(BaseModel):

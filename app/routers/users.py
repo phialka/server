@@ -1,9 +1,9 @@
 from fastapi import APIRouter,  Depends
-from typing import Union
+from typing import Union, List
 
 from auth import JWTAuth
-from schemas import UserList
-from controllers.users_logic import ServerUser
+from schemas import UserList, User
+from controllers.users_logic import ServerUser, UList
 
 users_router = APIRouter(
     prefix = "/users",
@@ -23,29 +23,31 @@ async def get_userid(username: str, authorize: JWTAuth = Depends()):
     pass
 
 
+@users_router.get("/user-lists", response_model=List[UserList.View])
+async def get_userlists(authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    return await ServerUser(authorize.get_jwt_subject()).get_userlists()
+
+
 @users_router.get("/{user_id}")
-async def get_user(user_id: int):
-    return {'user_id':user_id}
+async def get_user(user_id: int, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    observer = ServerUser(authorize.get_jwt_subject())
+    pass
 
 
-@users_router.get("/user-lists")
-async def get_userlists():
-    return {'status':'OK'}
+@users_router.post("/user-lists", response_model=UserList.View)
+async def create_userlists(userlist: UserList.Create, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    ulist = await (await UList().create(authorize.get_jwt_subject(), userlist)).create_view()
+    return ulist.view
 
 
-@users_router.post("/user-lists")
-async def create_userlists(userlist: UserList.Create):
-    return {'status':'OK'}
-
-
-@users_router.get("/user-lists/{list_id}")
-async def get_this_userlist(list_id: int):
-    return {'list_id':list_id}
-
-
-@users_router.get("/user-lists/{list_id}/users")
-async def getusers_from_userlist(list_id: int):
-    return {'list_id':list_id}
+@users_router.get("/user-lists/{list_id}/users", response_model=List[User.View])                         #
+async def get_users_from_userlist(list_id: int, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    list = await UList(id=list_id).create_users_view()
+    return list.users_view
 
 
 @users_router.post("/user-lists/{list_id}/users")

@@ -35,9 +35,8 @@ class SavedFile():
         return self.__dbfile
 
     @property
-    async def view(self):
-        await self.__init_file()
-        return (await self._create_view()).__view
+    def view(self):
+        return self.__view
 
 
     async def __init_file(self):
@@ -45,7 +44,8 @@ class SavedFile():
         self.__info = self.__dbfile.info_
 
     
-    async def _create_view(self):
+    async def create_view(self):
+        await self.__init_file()
         filedata = schemas.File(
             file_id=self.__dbfile.id,
             byte_syze=self.__info.size,
@@ -123,6 +123,7 @@ class SavedFile():
         info = await self.__create_info(file)
         path = f'{config.FILE_STORAGE}\{self.__hash[0:2]}\{self.__hash[2:4]}'
         self.__dbfile = await File.objects.create(hash=self.__hash, info=info.json(), path=path)
+        self.id = self.__dbfile.id
         
         with open(f"{path}\{self.__hash}", "wb") as new_file:
             self.file.seek(0,0)

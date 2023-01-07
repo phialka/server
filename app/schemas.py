@@ -105,6 +105,7 @@ class User():
         last_time: int
 
 
+
 class Search():
     class Users(BaseModel):
         """

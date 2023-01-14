@@ -24,11 +24,10 @@ async def get_profile_info(authorize: JWTAuth = Depends()):
     
 
 
-@unauth_router.post("/", response_model=User.View, status_code=201)
+@unauth_router.post("/", response_model=int, status_code=201)
 async def register(reg: User.Registration):
-    user = await ServerUser().create(reg)
-    await user.create_view()
-    return user.view
+    user_id = await UserController().create_user(reg)
+    return user_id
     
 
 @profile_router.patch("/", response_model=User.View)
@@ -63,6 +62,7 @@ async def check_username(username: str):
 
 @profile_router.get("/privacy-options", response_model=User.PrivacyOptions)
 async def get_privacy(authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
     user = await ServerUser(authorize.get_jwt_subject()).create_privacy_options_view()
     return user.privacy_options
 

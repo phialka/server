@@ -12,7 +12,7 @@ from controllers.files_logic import Storage, SavedFile
 
 
 class UList():
-    def __init__(self, dblist: Optional[UserList] = None, id: Optional[int] = None) -> None:
+    def __init__(self, dblist: Optional[UserList] = None, id: Optional[int] = None, subject: Optional['ServerUser'] = None) -> None:
         self.id: int
         self.__dbuserlist: UserList
 
@@ -21,10 +21,14 @@ class UList():
         self.__view: schemas.UserList.View
         self.__users_view: List[schemas.User.View] = list()
 
+        self.__subject: ServerUser
+
         if dblist:
             self.__dbuserlist = dblist
         if id:
             self.id = id
+        if subject:
+            self.__subject = subject
 
     @property
     def view(self):
@@ -58,21 +62,32 @@ class UList():
         return self
 
 
-    async def create(self, owner_id, schema: schemas.UserList.Create):
+    async def create(self, schema: schemas.UserList.Create):
         @database.transaction()
         async def creating_transaction():
             settings = UserList.Settings(ban_messages=schema.ban, notifications=schema.notification_settings)
-            self.__dbuserlist = await UserList.objects.create(owner_id=owner_id, title=schema.title, settings=settings.json())
+            self.__dbuserlist = await UserList.objects.create(owner_id=self.__subject.id, title=schema.title, settings=settings.json())
             for user_id in schema.user_ids:
                 await ServerUser(user_id).exists(assertation=True)
                 await UserInList.objects.create(list_id=self.__dbuserlist.id, user_id=user_id)
         await creating_transaction()
         return self
 
+    async def delete(self):
+        pass
+
 
 
 class ServerUser():
     def __init__(self, id: Optional[int] = None) -> None:
+        """
+        A class through which interaction with a specific user takes place. 
+        Can be initialized using the user ID. 
+        The behavior depends on the subject using the object.
+
+        :param subject: The user who uses this object. 
+        If the parameter is None, it is assumed that the object is being used by an unauthorized user or system.
+        """
         id: int
         if id:
             self.id = id
@@ -160,34 +175,6 @@ class ServerUser():
             can_find = self.__settings.privacy_settings.can_find
         )
         return self
-    
-
-    async def create(self, reg: schemas.User.Registration):
-        @database.transaction()
-        async def creating_transaction():
-            #if such user already exists
-            if await User.objects.filter(username=reg.username).exists():
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="such user already exist")
-
-            #create user
-            self.__dbuser = await User.objects.create(username=reg.username, userpass=reg.userpass)
-            self.id = self.__dbuser.id
-
-            #create userinfo
-            self.__info =  UserInfo.Info(name = reg.name, shortname = reg.shortname, description = reg.description, email = reg.email, last_visit=time.time())
-            self.__dbinfo = await UserInfo.objects.create(user_id=self.__dbuser, info=self.__info.json())
-
-            #create usersettings
-            self.__settings = UserSettings.Settings(privacy_settings=UserSettings.Settings.PrivacySettings())
-            self.__dbsettings = await UserSettings.objects.create(user_id=self.__dbuser, settings=self.__settings.json())
-
-            #create contacts and blacklist
-            contacts_settings = UserList.Settings(contacts=True, notifications=UserList.Settings.NotificationSettings())
-            blacklist_settings = UserList.Settings(black_list=True, notifications=UserList.Settings.NotificationSettings())
-            await UserList.objects.create(owner_id=self.__dbuser, title="Contacts", settings=contacts_settings.json())
-            await UserList.objects.create(owner_id=self.__dbuser, title="Blacklist", settings=blacklist_settings.json())
-        await creating_transaction()
-        return self
 
     
     async def exists(self, username: Optional[str] = None, assertation: bool = False) -> bool:
@@ -218,12 +205,10 @@ class ServerUser():
             
     
     async def get_id(self, username: str) -> Optional[int]:
-        if self.exists(username):
-            user = await User.objects.filter(User.username == username).get_or_none()
-            self.id = user.id
-            return self.id
-        else:
-            return None
+        await self.exists(username=username, assertation=True)
+        user = await User.objects.filter(User.username == username).get_or_none()
+        self.id = user.id
+        return self.id
 
 
     async def edit_info(self, new_info: schemas.User.EditInfo):
@@ -264,6 +249,12 @@ class ServerUser():
 
 
 class UserController():
+    def __init__(self, subject_id: Optional[int]=None) -> None:
+        self._subject: int
+        self.__user_id: int
+        self.__user: ServerUser
+        if subject_id:
+            self._subject = subject_id
 
     @classmethod
     async def check_username_isfree(cls, username: str) -> bool:
@@ -271,3 +262,41 @@ class UserController():
             return False
         else:
             return True
+    
+
+    async def create_user(self, reg: schemas.User.Registration) -> int:
+        @database.transaction()
+        async def creating_transaction():
+            #if such user already exists
+            if await User.objects.filter(username=reg.username).exists():
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="such user already exist")
+
+            #create user
+            user = await User.objects.create(username=reg.username, userpass=reg.userpass)
+            self.__user_id = user.id
+
+            #create userinfo
+            info =  UserInfo.Info(name = reg.name, shortname = reg.shortname, description = reg.description, email = reg.email, last_visit=time.time())
+            await UserInfo.objects.create(user_id=user.id, info=info.json())
+
+            #create usersettings
+            settings = UserSettings.Settings(privacy_settings=UserSettings.Settings.PrivacySettings())
+            await UserSettings.objects.create(user_id=user.id, settings=settings.json())
+
+            #create contacts and blacklist
+            contacts_settings = UserList.Settings(contacts=True, notifications=UserList.Settings.NotificationSettings())
+            blacklist_settings = UserList.Settings(black_list=True, notifications=UserList.Settings.NotificationSettings())
+            await UserList.objects.create(owner_id=user.id, title="Contacts", settings=contacts_settings.json())
+            await UserList.objects.create(owner_id=user.id, title="Blacklist", settings=blacklist_settings.json())
+            return user.id
+        return await creating_transaction()
+        
+
+
+class UserlistController():
+    def __init__(self, subject_id: Optional[int]=None) -> None:
+        self._subject: int
+        self.__userlist_id: int
+        self.__userlist: UList
+        if subject_id:
+            self._subject = subject_id

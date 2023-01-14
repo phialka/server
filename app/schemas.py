@@ -143,6 +143,65 @@ class ConversationList(BaseModel):
 
 
 
+class Attachment():
+    class Create(BaseModel):
+        type: str
+        file_id: int
+
+
+    class View(BaseModel):
+        type: str
+        file: Union[Photo, Video, Audio]
+
+
+
+class Reaction():
+    class SingleView(BaseModel):
+        badge: int
+        user_id: int
+
+
+    class ManyView(BaseModel):
+        badge: int
+        count: int
+
+
+
+class Message():
+    class Create(BaseModel):
+        user_ids: Optional[List[int]]
+        chat_ids: Optional[List[int]]
+        text: Optional[str]
+        attachments: Optional[List[Attachment.Create]]
+        reply_to: Optional[int]
+        forward_messages: Optional[List[int]]
+
+
+    class View(BaseModel):
+        text: Optional[str]
+        attachments: Optional[List[Attachment.View]]
+        reply_to: Optional[int]
+        forward_messages: Optional[List[int]]
+        reactions: Union[None, List[Reaction.SingleView], List[Reaction.ManyView]]
+        views: Union[None, List[int], int]
+
+
+
+class Chat():
+    class Create(BaseModel):
+        user_ids: List[int]
+        title: str
+        description: Optional[str]
+        photo_id: Optional[int]
+
+    class View(BaseModel):
+        title: str
+        description: Optional[str]
+        photo: Optional[Photo]
+        users_count: int
+
+
+
 class Channel(BaseModel):
     id: int
     author_id: int
@@ -185,28 +244,6 @@ class ChannelRole(BaseModel):
     join_permissions: int
     roling_permissions: Union[List[str], None] = None
     items: int
-
-
-
-class ChatCreate(BaseModel):
-    user_ids: list[int]
-    title: str
-    description: str
-    photo: Photo
-
-
-class Attachment(BaseModel):
-    type: str
-    file_id: int
-
-
-class MessageCreate(BaseModel):
-    user_ids: list[int]
-    chat_ids: list[int]
-    text: str
-    attachments: list[Attachment]
-    reply_to: int
-    forward_messages: list[int]
 
 
 class MessageSearchQuery(BaseModel):

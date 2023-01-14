@@ -9,6 +9,7 @@ from auth import JWTAuth
 from openapi_documentation import CustomServerAPI
 
 from controllers.files_logic import Storage
+from controllers.сhats_logic import PermissionController
 
 app = FastAPI()
 app.openapi = CustomServerAPI(app).get_openapi()
@@ -31,6 +32,8 @@ async def start():
         await database_.connect()
     tables_init()
     #Storage.create_storage()
+    await PermissionController.init_standard()
+    await PermissionController.load_role_ids()
 
 
 @app.on_event("shutdown")

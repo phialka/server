@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 import json
 
 import databases
@@ -149,8 +149,15 @@ class UserInList(ormar.Model):
 class Conversation(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversations"
+
+    class Settings(pydantic.BaseModel):
+        pass 
+    
     id: int = ormar.Integer(primary_key=True)
-    type: str = ormar.String(max_length=100)
+    type: str = ormar.String(max_length=10)
+    title: str = ormar.String(max_length=100)
+    description: str = ormar.String(max_length=100)
+    photo_id: File = ormar.ForeignKey(File)
     settings: pydantic.Json = ormar.JSON()
     owner_id: User = ormar.ForeignKey(User)
     created_at: int = ormar.Integer()
@@ -210,7 +217,8 @@ class Attachment(ormar.Model):
         tablename = "attachments"
     id: int = ormar.Integer(primary_key=True)
     message_id: Message = ormar.ForeignKey(Message)
-    files: pydantic.Json = ormar.JSON()
+    file: File = ormar.ForeignKey(File)
+    type: str = ormar.String(max_length=20)
 
 
 
@@ -271,21 +279,12 @@ class MessageQueue(ormar.Model):
 
 
 
-class ConversationUser(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "conversation_users"
-    id: int = ormar.Integer(primary_key=True)
-    conversation_id: Conversation = ormar.ForeignKey(Conversation)
-    user_id: User = ormar.ForeignKey(User)
-
-
-
 class Permission(ormar.Model):
     class Meta(BaseMeta):
         tablename = "permissions"
     id: int = ormar.Integer(primary_key=True)
     key: str = ormar.String(max_length=100)
-    descriprion: str = ormar.String(max_length=2000)
+    description: str = ormar.String(max_length=2000)
 
 
 
@@ -307,7 +306,7 @@ class RolePermission(ormar.Model):
 
 
 
-class ConversationUserRole(ormar.Model):
+class ConversationUser(ormar.Model):
     class Meta(BaseMeta):
         tablename = "converastion_user_roles"
     id: int = ormar.Integer(primary_key=True)

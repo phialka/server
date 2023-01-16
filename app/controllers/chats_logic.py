@@ -97,22 +97,36 @@ class PermissionController():
 
 
 class MsgAttachment():
-    def __init__(self, id: Optional[int] = None, message: 'ChatMessage' = None) -> None:
+    def __init__(self, id: Optional[int] = None) -> None:
+        """
+        Provides the ability to work correctly with an entity from the database, as well as converting it to a view for display in the API
+        """
         self.id: int
         self.__dbattachment: Attachment
 
-        self.__message: ChatMessage
-
         self.__view: schemas.Attachment.View
 
-        if message:
-            self.__message = message
         if id:
             self.id = id
 
+    @property
+    def view(self) -> schemas.Attachment.View:
+        return self.__view 
 
-    async def create(self, schema: schemas.Attachment.Create):
-        self.__dbattachment = await Attachment.objects.create(message_id=self.__message, file=schema.file_id, type=schema.type)
+    async def __load_from_db(self):
+        self.__dbattachment = await Attachment.objects.filter(Attachment.id == self.id).get()
+
+    async def create_view(self):
+        self.__dbattachment or await self.__load_from_db()
+        self.__view = schemas.Attachment.View(
+            type=self.__dbattachment.type,
+            file=(await SavedFile(self.__dbattachment.file).create_view()).view
+        )
+        return self
+
+    async def create(self, msg_id, schema: schemas.Attachment.Create):
+        self.__dbattachment = await Attachment.objects.create(message_id=msg_id, file=schema.file_id, type=schema.type)
+        self.id = self.__dbattachment.id
         return self
 
 
@@ -126,31 +140,119 @@ class MsgReaction():
 
 
 class ChatMessage():
-    def __init__(self, dbmessage: Optional[Message] = None, id: Optional[int] = None) -> None:
+    def __init__(self, id: Optional[int] = None) -> None:
+        """
+        Provides the ability to work correctly with an entity from the database, as well as converting it to a view for display in the API
+        """
         self.id: int
         self.__dbmessage: Message
 
         self.__attachments: List[MsgAttachment] = list()
-        self.__reply: ChatMessage
-        self.__forwarded: List[ChatMessage] = list()
+        self.__reply_id: int = None
+        self.__forwarded_ids: List[int] = list() 
         self.__answers: List[ChatMessage] = list()
         self.__reactions: List[MsgReaction] = list()
 
         self.__view: schemas.Message.View
 
-        if dbmessage:
-            self.__dbmessage = dbmessage
         if id:
             self.id = id
 
-    
-    async def create(self, schema: schemas.Message.Create):
-        pass
+    @property
+    def view(self) -> schemas.Message.View:
+        return self.__view 
+
+    async def __load_from_db(self):
+        self.__dbmessage = await Message.objects.filter(Message.id == self.id).get()
+
+    async def __load_attachments(self):
+        self.__attachments = [
+            await MsgAttachment(attach.id).create_view() for attach in await Attachment.objects.filter(Attachment.message_id.id == self.id).all()
+            ]
+
+    async def __load_reply(self):
+        dbreply = await Replice.objects.filter(Replice.message_id.id == self.id).get_or_none()
+        if dbreply:
+            self.__reply_id = dbreply.id
+
+    async def __load_forwardes(self):
+        dbforwards = await Forwarded.objects.filter(Replice.message_id.id == self.id).all()
+        if dbforwards:
+            self.__forwarded_ids = [forward.id for forward in dbforwards]
+
+    async def create_view(self):
+        await self.__load_from_db()
+        await self.__load_attachments()
+        await self.__load_reply()
+        await self.__load_forwardes()
+
+        self.__view = schemas.Message.View(
+            message_id=self.id,
+            text=self.__dbmessage.content,
+            attachments=[attach.view for attach in self.__attachments],
+            reply_to=self.__reply_id,
+            forward_messages=self.__forwarded_ids,
+            reactions=None,
+            views=None
+        )
+        return self
+
+
+
+
+
+class MessageController():
+    def __init__(self, subject_id: Optional[int]=None) -> None:
+        """
+        Provides methods for interacting with entities on behalf of the specified user. Initialized with a specific user id
+        """
+        self._subject: int
+        self.__message_id: int
+        self.__message: ChatMessage
+        if subject_id:
+            self._subject = subject_id
+
+    @property
+    def message(self) -> ChatMessage:
+        return self.__message
+
+
+    async def create_message(self, schema: schemas.Message.Create) -> int:
+        if not (schema.user_ids or schema.chat_ids):
+            raise HTTPException(status_code=400, detail="one of the parameters must be present: user_ids or chat_ids")
+        if not (schema.text or schema.attachments or schema.forward_messages):
+            raise HTTPException(status_code=400, detail="the message has no content")
+
+        database.transaction()
+        async def creating_transaction():
+            acttime = time.time()
+            message = await Message.objects.create(content=schema.text, updated_at=acttime, created_at=acttime)
+            for attach in schema.attachments:
+                await MsgAttachment().create(msg_id=message.id, schema=schemas.Attachment.Create(**attach))
+            for forward in schema.forward_messages:
+                await Forwarded.objects.create(forwarded_message_id=forward, message_id=message.id)
+            if schema.reply_to:
+                await Replice.objects.create(message_id=message.id, reply_message_id=schema.reply_to)
+            
+            for user_id in schema.user_ids:
+                await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=user_id, conversation_id=None)
+            for chat_id in schema.chat_ids:
+                await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=None, conversation_id=chat_id)
+            
+            return message.id
+        return await creating_transaction()
+
+
+    async def get_message(self, message_id):
+        return await ChatMessage(message_id).create_view()
 
 
 
 class Chat():
     def __init__(self, id:Optional[int]=None) -> None:
+        """
+        Provides the ability to work correctly with an entity from the database, as well as converting it to a view for display in the API
+        """
         self.id: int
         self.__dbchat: Conversation
 
@@ -179,6 +281,7 @@ class Chat():
         if self.__dbchat.photo_id:
             pass
         self.__view = schemas.Chat.View(
+            chat_id=self.id,
             title = self.__dbchat.title,
             description = self.__dbchat.description,
             photo = photo,
@@ -201,11 +304,17 @@ class Chat():
             await ConversationUser.objects.create(conversation_id=self.id, user_id=uid, role_id=PermissionController.role_ids['ChatUser'])
         return True
 
+    async def get_messages(self, count: int, offset: int):
+        pass
+
 
 
 
 class ChatController():
     def __init__(self, subject_id: Optional[int]=None) -> None:
+        """
+        Provides methods for interacting with entities on behalf of the specified user. Initialized with a specific user id
+        """
         self._subject: int
         self.__chat_id: int
         self.__chat: Chat
@@ -244,14 +353,20 @@ class ChatController():
         self.__chat_id = chat.id
         return chat.id
 
+    async def get_user_chats(self, count: int, offset: int):
+        db_chatusers = await ConversationUser.objects.filter(ConversationUser.user_id.id == self._subject).limit(count).offset(offset).all()
+        return [await Chat(user.conversation_id.id).create_view() for user in db_chatusers]
+    
 
     async def get_chat(self, chat_id):
         chat = await Chat(chat_id).create_view()
         return chat
     
+
     async def get_chat_members(self, chat_id: int, count: int, offset: int) -> List[schemas.User.View]:
         members = await Chat(chat_id).get_members(count, offset)
         return [member.view for member in members]
+
 
     async def add_chat_members(self, chat_id, user_ids: List[int]):
         return await Chat(chat_id).add_members(user_ids)

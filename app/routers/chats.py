@@ -3,7 +3,7 @@ from typing import Optional, List
 
 import schemas
 from auth import JWTAuth
-from controllers.сhats_logic import ChatController
+from controllers.chats_logic import ChatController, MessageController
 
 chats_router = APIRouter(
     prefix = "/chats",
@@ -13,8 +13,10 @@ chats_router = APIRouter(
 
 
 @chats_router.get('/')
-async def get_chats(count: int, offset:int, authorize: JWTAuth = Depends()):
+async def get_chats(count: Optional[int]=100, offset: Optional[int]=0, authorize: JWTAuth = Depends()):
     authorize.jwt_required()
+    chats = await ChatController(authorize.get_jwt_subject()).get_user_chats(count, offset)
+    return [chat.view for chat in chats]
 
 
 @chats_router.post('/', response_model=int)
@@ -24,13 +26,14 @@ async def create_chat(chat_data: schemas.Chat.Create, authorize: JWTAuth = Depen
 
 
 @chats_router.get('/messages')
-async def get_messages(count: int):
+async def get_personal_messages(count: int):
     return {'status':'OK'}
 
 
 @chats_router.post('/messages')
-async def send_message(message: schemas.Message.Create):
-    return {'status':'OK'}
+async def send_message(message: schemas.Message.Create, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    return await MessageController(authorize.get_jwt_subject()).create_message(message)
 
 
 @chats_router.delete('/messages')
@@ -51,6 +54,12 @@ async def get_messages_by_query(count: int, offset:int, query: schemas.MessageSe
 @chats_router.post('/messages/restore')
 async def restore_message(message_ids: list[int]):
     return {'status':'OK'}
+
+
+@chats_router.get('/messages/byid')
+async def get_messages_by_id(message_id: int, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    return (await MessageController(authorize.get_jwt_subject()).get_message(message_id)).view
 
 
 @chats_router.patch('/messages/{message_id}')
@@ -114,6 +123,11 @@ async def add_chat_members(chat_id:int, user_ids: List[int], authorize: JWTAuth 
 
 @chats_router.delete('/{chat_id}/members')
 async def delete_chat_members(chat_id:int, users_ids: list[int]):
+    return {'status':'OK'}
+
+
+@chats_router.get('/{chat_id}/messages')
+async def get_chat_messages(chat_id:int, message_id: int):
     return {'status':'OK'}
 
 

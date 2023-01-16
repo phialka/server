@@ -9,7 +9,7 @@ from auth import JWTAuth
 from openapi_documentation import CustomServerAPI
 
 from controllers.files_logic import Storage
-from controllers.сhats_logic import PermissionController
+from controllers.chats_logic import PermissionController
 
 app = FastAPI()
 app.openapi = CustomServerAPI(app).get_openapi()

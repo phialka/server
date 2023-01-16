@@ -169,15 +169,16 @@ class Reaction():
 
 class Message():
     class Create(BaseModel):
-        user_ids: Optional[List[int]]
-        chat_ids: Optional[List[int]]
+        user_ids: Optional[List[int]] = []
+        chat_ids: Optional[List[int]] = []
         text: Optional[str]
-        attachments: Optional[List[Attachment.Create]]
-        reply_to: Optional[int]
-        forward_messages: Optional[List[int]]
+        attachments: Optional[List[Attachment.Create]] = []
+        reply_to: Optional[int] = []
+        forward_messages: Optional[List[int]] = []
 
 
     class View(BaseModel):
+        message_id: int
         text: Optional[str]
         attachments: Optional[List[Attachment.View]]
         reply_to: Optional[int]
@@ -195,6 +196,7 @@ class Chat():
         photo_id: Optional[int]
 
     class View(BaseModel):
+        chat_id: int
         title: str
         description: Optional[str]
         photo: Optional[Photo]

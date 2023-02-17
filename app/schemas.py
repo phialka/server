@@ -169,22 +169,24 @@ class Reaction():
 
 class Message():
     class Create(BaseModel):
-        user_ids: Optional[List[int]] = []
-        chat_ids: Optional[List[int]] = []
+        user_ids: Optional[List[int]]
+        chat_ids: Optional[List[int]]
         text: Optional[str]
-        attachments: Optional[List[Attachment.Create]] = []
-        reply_to: Optional[int] = []
-        forward_messages: Optional[List[int]] = []
+        attachments: Optional[List[Attachment.Create]]
+        reply_to: Optional[int]
+        forward_messages: Optional[List[int]]
 
 
     class View(BaseModel):
         message_id: int
+        user_id: int
         text: Optional[str]
         attachments: Optional[List[Attachment.View]]
         reply_to: Optional[int]
         forward_messages: Optional[List[int]]
         reactions: Union[None, List[Reaction.SingleView], List[Reaction.ManyView]]
         views: Union[None, List[int], int]
+        created_at: int
 
 
 

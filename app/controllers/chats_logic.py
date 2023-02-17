@@ -117,7 +117,7 @@ class MsgAttachment():
         self.__dbattachment = await Attachment.objects.filter(Attachment.id == self.id).get()
 
     async def create_view(self):
-        self.__dbattachment or await self.__load_from_db()
+        await self.__load_from_db()
         self.__view = schemas.Attachment.View(
             type=self.__dbattachment.type,
             file=(await SavedFile(self.__dbattachment.file).create_view()).view
@@ -147,6 +147,7 @@ class ChatMessage():
         self.id: int
         self.__dbmessage: Message
 
+        self.owner: ServerUser
         self.__attachments: List[MsgAttachment] = list()
         self.__reply_id: int = None
         self.__forwarded_ids: List[int] = list() 
@@ -173,31 +174,36 @@ class ChatMessage():
     async def __load_reply(self):
         dbreply = await Replice.objects.filter(Replice.message_id.id == self.id).get_or_none()
         if dbreply:
-            self.__reply_id = dbreply.id
+            self.__reply_id = dbreply.reply_message_id.id
 
     async def __load_forwardes(self):
         dbforwards = await Forwarded.objects.filter(Replice.message_id.id == self.id).all()
         if dbforwards:
             self.__forwarded_ids = [forward.id for forward in dbforwards]
 
+    async def __load_queue(self):
+        queue = await MessageQueue.objects.filter(MessageQueue.message_id.id == self.id).first()
+        self.owner = ServerUser(queue.sender_id.id)
+
     async def create_view(self):
         await self.__load_from_db()
         await self.__load_attachments()
         await self.__load_reply()
         await self.__load_forwardes()
+        await self.__load_queue()
 
         self.__view = schemas.Message.View(
             message_id=self.id,
+            user_id=self.owner.id,
             text=self.__dbmessage.content,
             attachments=[attach.view for attach in self.__attachments],
             reply_to=self.__reply_id,
             forward_messages=self.__forwarded_ids,
             reactions=None,
-            views=None
+            views=None,
+            created_at=self.__dbmessage.created_at
         )
         return self
-
-
 
 
 
@@ -227,24 +233,46 @@ class MessageController():
         async def creating_transaction():
             acttime = time.time()
             message = await Message.objects.create(content=schema.text, updated_at=acttime, created_at=acttime)
-            for attach in schema.attachments:
-                await MsgAttachment().create(msg_id=message.id, schema=schemas.Attachment.Create(**attach))
-            for forward in schema.forward_messages:
-                await Forwarded.objects.create(forwarded_message_id=forward, message_id=message.id)
+            if schema.attachments:
+                for attach in schema.attachments:
+                    await MsgAttachment().create(msg_id=message.id, schema=schemas.Attachment.Create(**attach.dict()))
+            if schema.forward_messages:
+                for forward in schema.forward_messages:
+                    await Forwarded.objects.create(forwarded_message_id=forward, message_id=message.id)
             if schema.reply_to:
                 await Replice.objects.create(message_id=message.id, reply_message_id=schema.reply_to)
-            
-            for user_id in schema.user_ids:
-                await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=user_id, conversation_id=None)
-            for chat_id in schema.chat_ids:
-                await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=None, conversation_id=chat_id)
+
+            if schema.user_ids:
+                for user_id in schema.user_ids:
+                    await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=user_id, conversation_id=None)
+            if schema.chat_ids:
+                for chat_id in schema.chat_ids:
+                    await MessageQueue.objects.create(message_id=message.id, sender_id=self._subject, recipient_id=None, conversation_id=chat_id)
             
             return message.id
         return await creating_transaction()
 
 
-    async def get_message(self, message_id):
-        return await ChatMessage(message_id).create_view()
+    async def get_message_byid(self, message_id):
+        try:
+            return await ChatMessage(message_id).create_view()
+        except dbexceptions.NoMatch:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'message with id {message_id} not exists')
+
+    
+    async def get_user_messages(self, newer: int, count: int) -> List[ChatMessage]:
+        queue = await MessageQueue.objects.filter(
+            (MessageQueue.recipient_id.id == self._subject) & (MessageQueue.message_id.created_at >= newer)
+            ).limit(count).all()
+        return [await ChatMessage(q.message_id.id).create_view() for q in queue]
+
+    
+    async def get_chat_messages(self, chat_id: int, newer: int, count: int):
+        queue = await MessageQueue.objects.filter(
+            (MessageQueue.conversation_id.id == chat_id) & (MessageQueue.message_id.created_at >= newer)
+            ).limit(count).all()
+        return [await ChatMessage(q.message_id.id).create_view() for q in queue]
+
 
 
 

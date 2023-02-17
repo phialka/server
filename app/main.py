@@ -43,9 +43,9 @@ async def stop():
         await database_.disconnect()
 
 
-@app.get("/")
+@app.get("/", tags=["server"])
 async def mainpage():
-    return {"name": "Phialka_API", "version": 1.0, "status": "working"}
+    return {"name": config.SERVER_NAME, "status": "working"}
 
 
 

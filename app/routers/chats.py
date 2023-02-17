@@ -25,9 +25,11 @@ async def create_chat(chat_data: schemas.Chat.Create, authorize: JWTAuth = Depen
     return await ChatController(authorize.get_jwt_subject()).create_chat(chat_data)
 
 
-@chats_router.get('/messages')
-async def get_personal_messages(count: int):
-    return {'status':'OK'}
+@chats_router.get('/messages', response_model=List[schemas.Message.View])
+async def get_personal_messages(newer: int, count: Optional[int]=100, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    messages = await MessageController(authorize.get_jwt_subject()).get_user_messages(newer, count)
+    return [msg.view for msg in messages]
 
 
 @chats_router.post('/messages')
@@ -59,7 +61,7 @@ async def restore_message(message_ids: list[int]):
 @chats_router.get('/messages/byid')
 async def get_messages_by_id(message_id: int, authorize: JWTAuth = Depends()):
     authorize.jwt_required()
-    return (await MessageController(authorize.get_jwt_subject()).get_message(message_id)).view
+    return (await MessageController(authorize.get_jwt_subject()).get_message_byid(message_id)).view
 
 
 @chats_router.patch('/messages/{message_id}')
@@ -126,9 +128,11 @@ async def delete_chat_members(chat_id:int, users_ids: list[int]):
     return {'status':'OK'}
 
 
-@chats_router.get('/{chat_id}/messages')
-async def get_chat_messages(chat_id:int, message_id: int):
-    return {'status':'OK'}
+@chats_router.get('/{chat_id}/messages', response_model=List[schemas.Message.View])
+async def get_chat_messages(chat_id:int, newer: int, count: int = 100, authorize: JWTAuth = Depends()):
+    authorize.jwt_required()
+    msgs = await MessageController(authorize.get_jwt_subject()).get_chat_messages(chat_id, newer, count)
+    return [msg.view for msg in msgs]
 
 
 @chats_router.post('/{chat_id}/messages/pin')

@@ -5,7 +5,7 @@ import itertools
 from typing import BinaryIO
 
 from starlette.responses import Response
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from PIL import Image
 
 from dbmodels import *
@@ -168,4 +168,16 @@ class Storage():
         file = await File.objects.get_or_none(hash=file_hash)
         with open(f"{file.path}\{file.hash}", "rb") as data:
             return Response(content=data.read(), media_type=file.info["type"], status_code=200)
+
+    
+    @classmethod
+    async def get_link(cls, file_id: int) -> str:
+        """
+        Returns the link to file by file id
+        """
+        file = await File.objects.filter(File.id == file_id).get_or_none()
+        if not file:
+            raise HTTPException(status_code=404, detail="such file not exists")
+        return file.info_.url
+        
 

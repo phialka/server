@@ -2,38 +2,34 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from routers import profile, users, channels, chats, files, authentification
-from dbmodels import database, tables_init
+from routers import channels, authentification
 import config
 from auth import JWTAuth
 from openapi_documentation import CustomServerAPI
 
-from controllers.files_logic import Storage
-from controllers.chats_logic import PermissionController
+#from controllers.files_logic import Storage
+#from controllers.chats_logic import PermissionController
 
 app = FastAPI()
 app.openapi = CustomServerAPI(app).get_openapi()
-app.state.database = database
+
 
 
 app.include_router(authentification.auth_router)
-app.include_router(profile.profile_router)
-app.include_router(profile.unauth_router)
-app.include_router(users.users_router)
+#app.include_router(profile.profile_router)
+#app.include_router(profile.unauth_router)
+#app.include_router(users.users_router)
 app.include_router(channels.channels_router)
-app.include_router(chats.chats_router)
-app.include_router(files.files_router)
+#app.include_router(chats.chats_router)
+#app.include_router(files.files_router)
 
 
 @app.on_event("startup")
 async def start():
-    database_ = app.state.database
-    if not database_.is_connected:
-        await database_.connect()
-    tables_init()
+    pass
     #Storage.create_storage()
-    await PermissionController.init_standard()
-    await PermissionController.load_role_ids()
+    #await PermissionController.init_standard()
+    #await PermissionController.load_role_ids()
 
 
 @app.on_event("shutdown")

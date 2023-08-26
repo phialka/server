@@ -30,83 +30,96 @@ class AudioTypeInfo(pydantic.BaseModel):
     duration: int
 
 
+
 class File(ormar.Model):
     class Meta(BaseMeta):
         tablename = "files"
 
-    class Info(pydantic.BaseModel):
-        type: str
-        title: str
-        size: int
-        upload_at: int
-        type_info: Union[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo, None]
-        url: str
-
     id: int = ormar.Integer(primary_key=True)
     hash: str = ormar.String(max_length=34)
-    info: pydantic.Json[Info] = ormar.JSON()
-    path: str = ormar.String(max_length=100)
+    mime_type: str = ormar.String(max_length=50)
+    size: int = ormar.Integer()
+    type_info: Optional[pydantic.Json[PhotoTypeInfo, VideoTypeInfo, AudioTypeInfo]] = ormar.JSON()
+    location: str = ormar.String(max_length=100)
 
     @property
-    def info_(self) -> Info:
-        return File.Info(**self.info)
+    def main_type(self):
+        return self.mime_type.split("/")[0]
+
+    @property
+    def type_info_(self) -> PhotoTypeInfo|VideoTypeInfo|AudioTypeInfo|None:
+        """presrnts json-field 'type_info' as dict"""
+        if self.type_info != None:
+            if self.main_type == "image":
+                return PhotoTypeInfo(**self.type_info)
+            elif self.main_type == "video":
+                return VideoTypeInfo(**self.type_info)
+            elif self.main_type == "audio":
+                return AudioTypeInfo(**self.type_info)
+        return None
 
 
 
 class User(ormar.Model):
     class Meta(BaseMeta):
         tablename = "users"
-    id: int = ormar.Integer(primary_key=True)
-    username: str = ormar.String(max_length=100, unique=True)
-    userpass: str = ormar.String(max_length=100)
-
-
-class UserInfo(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "user_info"
 
     class Info(pydantic.BaseModel):
         name: str
         shortname: str
         description: Optional[str]
-        email: Optional[pydantic.EmailStr]
-        photo_file_id: Optional[int]
-        last_visit: int
+
+    class Settings(pydantic.BaseModel):
+        online_display: str = "all"
+        profile_photo_display: str = "all"
+        personal_messages_resend: str = "all"
+        can_write: str = "all"
+        mentions: str = "all"
+        add_to_chats: str = "all"
+        add_to_channels: str = "all"
+        can_find: str = "all"
 
     id: int = ormar.Integer(primary_key=True)
-    user_id: User = ormar.ForeignKey(User)
     info: pydantic.Json[Info] = ormar.JSON()
+    settings: pydantic.Json = ormar.JSON()
+    photo_file_id: File = ormar.ForeignKey(File)
+    last_visit: int = ormar.Integer()
+    created_at: int = ormar.Integer()
 
     @property
     def info_(self) -> Info:
-        return UserInfo.Info(**self.info)
+        """presrnts json-field 'info' as dict"""
+        return User.Info(**self.info)
 
 
 
-class UserSettings(ormar.Model):
+class Auth(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "user_settings"
-
-    class Settings(pydantic.BaseModel):
-        class PrivacySettings(pydantic.BaseModel):
-            online_display: str = "all"
-            profile_photo_display: str = "all"
-            personal_messages_resend: str = "all"
-            can_write: str = "all"
-            mentions: str = "all"
-            add_to_chats: str = "all"
-            add_to_channels: str = "all"
-            can_find: str = "all"
-
-        privacy_settings: PrivacySettings
-
+        tablename = "auth"
     id: int = ormar.Integer(primary_key=True)
     user_id: User = ormar.ForeignKey(User)
-    settings: pydantic.Json = ormar.JSON()
+    username: str = ormar.String(max_length=100, unique=True)
+    userpass: str = ormar.String(max_length=100)
 
-    @property
-    def settings_(self) -> Settings:
-        return UserSettings.Settings(**self.settings)
+
+
+class UserBlacklist(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "blacklist"
+
+    id: int = ormar.Integer(primary_key=True)
+    owner_id: User = ormar.ForeignKey(User, related_name="blacklist")
+    banned_user: User = ormar.ForeignKey(User, related_name="banned_from")
+
+
+
+class Contact(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "contacts"
+
+    id: int = ormar.Integer(primary_key=True)
+    owner_id: User = ormar.ForeignKey(User, related_name="contacts")
+    contact_user: User = ormar.ForeignKey(User, related_name="into_contacts")
 
 
 
@@ -115,16 +128,9 @@ class UserList(ormar.Model):
         tablename = "user_lists"
 
     class Settings(pydantic.BaseModel):
-        class NotificationSettings(pydantic.BaseModel):
-            messages: bool = True
-            references: bool = True
-            reactions: bool = True
-            answers: bool = True
-
-        contacts: bool = False
-        black_list: bool = False
-        ban_messages: bool = False
-        notifications: NotificationSettings
+        notify_messages: bool = True
+        notify_reactions: bool = True
+        notify_answers: bool = True
 
     id: int = ormar.Integer(primary_key=True)
     owner_id: User = ormar.ForeignKey(User)
@@ -141,7 +147,7 @@ class UserInList(ormar.Model):
     class Meta(BaseMeta):
         tablename = "users_in_lists"
     id: int = ormar.Integer(primary_key=True)
-    list_id: UserList = ormar.ForeignKey(UserList)
+    list_id: UserList = ormar.ForeignKey(UserList, related_name="rows")
     user_id: User = ormar.ForeignKey(User)
 
 
@@ -154,7 +160,6 @@ class Conversation(ormar.Model):
         pass 
     
     id: int = ormar.Integer(primary_key=True)
-    type: str = ormar.String(max_length=10)
     title: str = ormar.String(max_length=100)
     description: str = ormar.String(max_length=100)
     photo_id: File = ormar.ForeignKey(File)
@@ -171,7 +176,7 @@ class ConversationList(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     owner_id: User = ormar.ForeignKey(User)
     title: str = ormar.String(max_length=100)
-    notify_settings: pydantic.Json = ormar.JSON()
+    settings: pydantic.Json = ormar.JSON()
 
 
 
@@ -181,6 +186,7 @@ class ConversationInList(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     list_id: ConversationList = ormar.ForeignKey(ConversationList)
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
+    user_id: User = ormar.ForeignKey(User, related_name="in_lists")
 
 
 
@@ -190,6 +196,8 @@ class Server(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     ip: int = ormar.Integer()
     port: int = ormar.Integer()
+    title: str = ormar.String(max_length=100)
+    description: str = ormar.String(max_length=100)
 
 
 
@@ -206,6 +214,9 @@ class Message(ormar.Model):
     class Meta(BaseMeta):
         tablename = "messages"
     id: int = ormar.Integer(primary_key=True)
+    conversation_id: Conversation = ormar.ForeignKey(Conversation)
+    destination_user: User = ormar.ForeignKey(User, related_name="dst_user")
+    user_id: User = ormar.ForeignKey(User, related_name="msg_author")
     content: str = ormar.String(max_length=1000)
     created_at: int = ormar.Integer()
     updated_at: int = ormar.Integer()
@@ -235,7 +246,7 @@ class Forwarded(ormar.Model):
     class Meta(BaseMeta):
         tablename = "forwardes"
     id: int = ormar.Integer(primary_key=True)
-    message_id: Message = ormar.ForeignKey(Message, related_name="forwarded")
+    message_id: Message = ormar.ForeignKey(Message, related_name="forwardes")
     forwarded_message_id: Message = ormar.ForeignKey(Message, related_name="be_forwarded")
 
 
@@ -268,17 +279,6 @@ class MessageReaction(ormar.Model):
 
 
 
-class MessageQueue(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "message_queues"
-    id: int = ormar.Integer(primary_key=True)
-    conversation_id: Conversation = ormar.ForeignKey(Conversation)
-    message_id: Message = ormar.ForeignKey(Message)
-    sender_id: User = ormar.ForeignKey(User, related_name="sender_user")
-    recipient_id: User = ormar.ForeignKey(User, related_name="recipient_user")
-
-
-
 class Permission(ormar.Model):
     class Meta(BaseMeta):
         tablename = "permissions"
@@ -292,7 +292,7 @@ class ConversationRole(ormar.Model):
     class Meta(BaseMeta):
         tablename = "conversation_roles"
     id: int = ormar.Integer(primary_key=True)
-    role: str = ormar.String(max_length=100)
+    role_name: str = ormar.String(max_length=100)
 
 
 
@@ -308,7 +308,7 @@ class RolePermission(ormar.Model):
 
 class ConversationUser(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "converastion_user_roles"
+        tablename = "converastion_user"
     id: int = ormar.Integer(primary_key=True)
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
     role_id: ConversationRole = ormar.ForeignKey(ConversationRole)

@@ -1,16 +1,29 @@
-import dbmodels
 import time
 from pydantic import BaseModel
 from typing import Optional, Union
 
+try:
+    import dbmodels
+except:
+    import app.dbmodels as dbmodels
 
 
-async def connect():
-    database_ = dbmodels.database
+
+async def activate_database(database_url: Optional[str] = None):
+    if database_url:
+        dbmodels.BaseMeta.change_db(database_url)
+    dbmodels.tables_init(database_url)
+
+    database_ = dbmodels.BaseMeta.database
     if not database_.is_connected:
         await database_.connect()
-    dbmodels.tables_init()
 
+
+
+async def inactivate_database():
+    database_ = dbmodels.BaseMeta.database
+    if database_.is_connected:
+        await database_.disconnect()
 
 
 
@@ -203,7 +216,7 @@ class File(DataEntity):
             type = model.mime_type,
             size = model.size,
             location = model.location,
-            type_info = model.type_info_
+            type_info = model.type_info_.dict()
             )
 
 

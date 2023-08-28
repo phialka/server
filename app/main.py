@@ -2,10 +2,12 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from openapi_documentation import CustomServerAPI
 from routers import channels, authentification
 import config
 from auth import JWTAuth
-from openapi_documentation import CustomServerAPI
+import repo
+
 
 #from controllers.files_logic import Storage
 #from controllers.chats_logic import PermissionController
@@ -34,9 +36,7 @@ async def start():
 
 @app.on_event("shutdown")
 async def stop():
-    database_ = app.state.database
-    if database_.is_connected:
-        await database_.disconnect()
+    pass
 
 
 @app.get("/", tags=["server"])

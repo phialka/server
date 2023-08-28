@@ -1,20 +1,34 @@
 from typing import Optional, Union, List
-import json
 
 import databases
 import sqlalchemy
 import ormar
 import pydantic
 
-import config
+try:
+    import config
+except: 
+    import app.config as config
 
 
-database = databases.Database(config.DATABASE_URL)
+#default value
+_database_url = config.DATABASE_URL
+
 metadata = sqlalchemy.MetaData()
+
 
 class BaseMeta(ormar.ModelMeta):
     metadata = metadata
-    database = database
+    database = databases.Database(_database_url)
+    
+    @classmethod
+    def change_db(cls, db_url: str) -> None:
+        """
+        Use to work with other database
+        Don't use it without adapter 
+        """
+        cls.database = databases.Database(db_url)
+
 
 
 class PhotoTypeInfo(pydantic.BaseModel):
@@ -325,6 +339,6 @@ class ConversationsFile(ormar.Model):
 
 
 
-def tables_init():
-    engine = sqlalchemy.create_engine(config.DATABASE_URL)
+def tables_init(db_url: Optional[str]):
+    engine = sqlalchemy.create_engine(db_url or _database_url)
     metadata.create_all(engine)

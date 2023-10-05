@@ -14,17 +14,16 @@ except:
 #default value
 _database_url = config.DATABASE_URL
 
-metadata = sqlalchemy.MetaData()
 
 
 class BaseMeta(ormar.ModelMeta):
-    metadata = metadata
+    metadata = sqlalchemy.MetaData()
     database = databases.Database(_database_url)
     
     @classmethod
     def change_db(cls, db_url: str) -> None:
         """
-        Use to work with other database
+        Use to change database
         Don't use it without adapter 
         """
         cls.database = databases.Database(db_url)
@@ -339,6 +338,59 @@ class ConversationsFile(ormar.Model):
 
 
 
-def tables_init(db_url: Optional[str]):
-    engine = sqlalchemy.create_engine(db_url or _database_url)
-    metadata.create_all(engine)
+async def connect_database(database_url: Optional[str] = None):
+    if database_url:
+        BaseMeta.change_db(database_url)
+
+    engine = sqlalchemy.create_engine(database_url or _database_url)
+    BaseMeta.metadata.create_all(engine)
+
+    database_ = BaseMeta.database
+    if not database_.is_connected:
+        await database_.connect()
+
+
+
+async def disconnect_database():
+    if BaseMeta.database.is_connected:
+        await BaseMeta.database.disconnect()
+
+
+
+
+
+
+
+# class DatabaseSchemed():
+#     def __init__(self, db_url, database) -> None:
+#         self.db: databases.Database = database
+#         self.db_url = db_url
+
+#         self.users = User
+#         self.auth = Auth
+    
+
+#     async def connect_database(database_url: Optional[str] = None):
+#         if database_url:
+#             BaseMeta.change_db(database_url)
+ 
+#         engine = sqlalchemy.create_engine(database_url or _database_url)
+#         BaseMeta.metadata.create_all(engine)
+
+#         database_ = BaseMeta.database
+#         if not database_.is_connected:
+#             await database_.connect()
+
+
+#     async def disconnect_database(database):
+#         if database.is_connected:
+#             await database.disconnect()
+
+    
+#     @classmethod
+#     async def getdb(cls, db_url) -> None:
+#         await cls.connect_database(db_url)
+#         return cls(db_url, BaseMeta.database)
+
+
+

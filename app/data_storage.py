@@ -5,6 +5,7 @@ from models import abstracts as abs
 from models.database import dbtables
 from models.database.dbmodels import *
 from models.fdbmodels import *
+import config
 
 
 class DBType(Enum):
@@ -27,7 +28,7 @@ class DataStorage():
 
 
 class DBDataStorage(DataStorage):
-    database_url = "postgresql://postgres:toor@127.0.0.1:5432/phidb"
+    database_url = config.DATABASE_URL
 
     @classmethod
     async def getStorage(cls):
@@ -36,13 +37,14 @@ class DBDataStorage(DataStorage):
         await dbtables.connect_database(cls.database_url)
         obj = cls()
         obj.users = DBUser
+        obj.auth = DBAuth
         return obj
 
 
 
 
 class JsonDataStorage(DataStorage):
-    storage_path = "jsondb/"
+    storage_path = config.JSON_DB_PATH
 
     @classmethod
     async def getStorage(cls):
@@ -51,10 +53,6 @@ class JsonDataStorage(DataStorage):
         obj = cls()
         obj.users = FDBUser.set_db(cls.storage_path + "users.json")
         return obj
-
-
-
-
 
 
 

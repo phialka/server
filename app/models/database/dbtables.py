@@ -77,10 +77,6 @@ class User(ormar.Model):
     class Meta(BaseMeta):
         tablename = "users"
 
-    class Info(pydantic.BaseModel):
-        name: str
-        shortname: str
-        description: Optional[str]
 
     class Settings(pydantic.BaseModel):
         online_display: str = "all"
@@ -93,16 +89,13 @@ class User(ormar.Model):
         can_find: str = "all"
 
     id: int = ormar.Integer(primary_key=True)
-    info: pydantic.Json[Info] = ormar.JSON()
+    name: str = ormar.String(max_length=100)
+    shortname: str = ormar.String(max_length=100, unique=True)
+    description: Optional[str] = ormar.String(max_length=512, nullable=True)
     settings: pydantic.Json = ormar.JSON()
     photo_file_id: File = ormar.ForeignKey(File)
     last_visit: int = ormar.Integer()
     created_at: int = ormar.Integer()
-
-    @property
-    def info_(self) -> Info:
-        """presrnts json-field 'info' as dict"""
-        return User.Info(**self.info)
 
 
 
@@ -199,7 +192,6 @@ class ConversationInList(ormar.Model):
     id: int = ormar.Integer(primary_key=True)
     list_id: ConversationList = ormar.ForeignKey(ConversationList)
     conversation_id: Conversation = ormar.ForeignKey(Conversation)
-    user_id: User = ormar.ForeignKey(User, related_name="in_lists")
 
 
 

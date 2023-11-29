@@ -1,19 +1,31 @@
 from typing import Optional
 import time
 
-import models.abstracts as abs
+from models.abstracts.user import AbsUser
 import models.database.dbtables as tables
+from models.filter import ConditionTreeNode, PostgreConditionTranslator
 
 
+class DBUser(AbsUser):
 
-class DBUser(abs.AbsUser):
+    _condition_translator = PostgreConditionTranslator
+    _fields_display = {
+        AbsUser._F.id.content : tables.User.id,
+        AbsUser._F.name.content : tables.User.name,
+        AbsUser._F.shortname.content : tables.User.shortname,
+        AbsUser._F.description.content : tables.User.description,
+        AbsUser._F.photo_id.content : tables.User.photo_file_id.id,
+        AbsUser._F.last_time.content : tables.User.last_visit,
+        AbsUser._F.created_at.content : tables.User.created_at
+    }
+
     @classmethod
-    def __from_dbmodel(cls, model: tables.User) -> "abs.AbsUser":
+    def __from_dbmodel(cls, model: tables.User) -> "AbsUser":
         return cls(
             id = model.id, 
-            name = model.info_.name, 
-            shortname = model.info_.shortname,
-            description = model.info_.description,
+            name = model.name, 
+            shortname = model.shortname,
+            description = model.description,
             photo_id = [file.id if file!=None else None for file in (model.photo_file_id, )][0],
             last_time = model.last_visit,
             created_at = model.created_at
@@ -21,9 +33,12 @@ class DBUser(abs.AbsUser):
 
 
     @classmethod
-    async def get(cls, user_id: int) -> list["abs.AbsUser"]:
-        response = await tables.User.objects.all(id=user_id)
-        return [cls.__from_dbmodel(usr) for usr in response]
+    async def get(cls, filter: ConditionTreeNode = None) -> list["AbsUser"]:
+        if type(filter) == type(None):
+            targets = await tables.User.objects.all()
+        else: 
+            targets = await tables.User.objects.all(cls._condition_translator.build_condition(filter, cls._fields_display))
+        return [cls.__from_dbmodel(usr) for usr in targets]
 
 
     @classmethod
@@ -67,34 +82,7 @@ class DBUser(abs.AbsUser):
 
     
     @classmethod
-    async def delete(cls, user_id: int) -> int:
-        response = await tables.User.objects.filter(id=user_id).delete()
-        return response
-
-
-
-class DBAuth(abs.AbsAuth):
-    @classmethod
-    async def get(cls, username: str) -> list["abs.AbsAuth"]:
-        auths = await tables.Auth.objects.all(username=username)
-        return [cls(**a.dict(exclude={"user_id"}), user_id=a.user_id.id) for a in auths]
-
-
-    @classmethod
-    async def add(
-            cls, user_id: int, username: str, userpass: int) -> int:
-        new_auth = await tables.Auth.objects.create(user_id=user_id, username=username, userpass=userpass)
-        return new_auth.id
-
-    @classmethod
-    async def update(cls, auth_id: int, username: Optional[str] = None, userpass: Optional[str] = None) -> int:
-        args = {i[0]:i[1] for i in {"username":username, "userpass": userpass}.items() if i[1]!=None}
-        upd_count = await tables.Auth.objects.filter(id=auth_id).update(**args)
-        return upd_count
-
-
-    @classmethod
-    async def delete(cls, auth_id: Optional[int] = None, user_id: Optional[int] = None) -> int:
-        args = {i[0]:i[1] for i in {"id":auth_id, "user_id": user_id}.items() if i[1]!=None}
-        del_count = await tables.Auth.objects.filter(id=auth_id).delete(**args)
-        return del_count
+    async def delete(cls, filter: ConditionTreeNode) -> int:
+        # response = await tables.User.objects.filter(id=user_id).delete()
+        # return response
+        pass

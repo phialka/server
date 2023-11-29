@@ -1,11 +1,12 @@
-from enum import Enum
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 
-from models import abstracts as abs
+from models.abstracts import *
 from models.database import dbtables
-from models.database.dbmodels import *
-from models.fdbmodels import *
+from models.database import *
+from models.json_db import *
 import config
+# from models.db_type import DBType
 
 
 class DBType(Enum):
@@ -18,8 +19,8 @@ class DataStorage():
     __metaclass__ = ABCMeta
 
     type: DBType
-    users: abs.AbsUser
-    auth: abs.AbsAuth
+    users: AbsUser
+    auth: AbsAuth
 
     @abstractmethod
     async def getStorage(cls):

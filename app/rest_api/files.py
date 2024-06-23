@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Response
 from fastapi.responses import FileResponse
 
 from entities import File
@@ -49,4 +49,5 @@ async def get_file_info(file_id: UUID):
         )
 async def get_file(download_id: UUID):
     file_path = await uc.download_file_by_download_id(download_id)
-    return FileResponse(path=file_path, media_type='multipart/form-data')
+    with open(file_path, 'rb') as f:
+        return Response(content=f.read(), status_code=200)

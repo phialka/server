@@ -2,56 +2,47 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from openapi_documentation import CustomServerAPI
-from routers import channels, authentification
+from utils.openapi_documentation import CustomServerAPI
+from database.tables import connect_database, disconnect_database
+from rest_api import files_router
 import config
-from auth import JWTAuth
-import repo
 
 
-#from controllers.files_logic import Storage
-#from controllers.chats_logic import PermissionController
 
 app = FastAPI()
 app.openapi = CustomServerAPI(app).get_openapi()
 
 
 
-app.include_router(authentification.auth_router)
-#app.include_router(profile.profile_router)
-#app.include_router(profile.unauth_router)
-#app.include_router(users.users_router)
-app.include_router(channels.channels_router)
-#app.include_router(chats.chats_router)
-#app.include_router(files.files_router)
+app.include_router(files_router)
+
 
 
 @app.on_event("startup")
 async def start():
-    pass
-    #Storage.create_storage()
-    #await PermissionController.init_standard()
-    #await PermissionController.load_role_ids()
+    await connect_database()
+
 
 
 @app.on_event("shutdown")
 async def stop():
-    pass
+    await disconnect_database()
 
 
-@app.get("/", tags=["server"])
+
+@app.get("/domain", tags=["domain"])
 async def mainpage():
     return {"name": config.SERVER_NAME, "status": "working"}
 
 
 
-# exception handler for jwtauth
-@app.exception_handler(JWTAuth.auth_exeption)
-def authjwt_exception_handler(request: Request, exc: JWTAuth.auth_exeption):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
+# # exception handler for jwtauth
+# @app.exception_handler(JWTAuth.auth_exeption)
+# def authjwt_exception_handler(request: Request, exc: JWTAuth.auth_exeption):
+#     return JSONResponse(
+#         status_code=exc.status_code,
+#         content={"detail": exc.message}
+#     )
 
 
 if __name__ == "__main__":

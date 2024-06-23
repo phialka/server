@@ -1,0 +1,51 @@
+from typing import BinaryIO
+from uuid import UUID, uuid4
+from hashlib import md5
+from datetime import datetime
+from mimetypes import guess_type
+
+from entities import File, FileFilter
+from .abstracts import FileRepo, FileStorage
+
+
+
+class FileUseCases():
+    def __init__(self, file_repo: FileRepo, file_storage: FileStorage) -> None:
+        self.__repo: FileRepo = file_repo
+        self.__storage: FileStorage = file_storage
+
+
+    async def upload_file(self, bin_file: BinaryIO) -> File:
+        byte_size = bin_file.seek(0, 2)
+        bin_file.seek(0)
+
+        download_id = uuid4()
+        await self.__storage.save(bin_file, download_id)
+
+        file = File(
+            file_id = uuid4(),
+            download_id = download_id,
+            size = byte_size,
+            hash = md5(bin_file.read()).hexdigest(),
+            mime_type = 'unknown',
+            upload_at = datetime.now()
+        )
+
+        await self.__repo.save(file)
+
+        return file
+
+
+
+    async def get_file_by_id(self, file_id: UUID) -> File:
+        files = await self.__repo.get(
+            filter = FileFilter(file_id=file_id)
+            )
+
+        return files[0]
+
+
+
+    async def download_file_by_download_id(self, download_id: UUID) -> str:
+        file_path = await self.__storage.get(download_id)
+        return file_path

@@ -7,7 +7,7 @@ from database import tables
 class SQLFileRepo(FileRepo):
 
     def __init__(self) -> None:
-        self.__table = tables.Files
+        self.__table = tables.File
 
 
     async def save(self, file: File) -> bool:
@@ -18,7 +18,9 @@ class SQLFileRepo(FileRepo):
             mime_type = file.mime_type,
             size = file.size,
             upload_at = file.upload_at
-    )
+        )
+
+        return True
 
 
     async def get(self, filter: FileFilter) -> list[File]:

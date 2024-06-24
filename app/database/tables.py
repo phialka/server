@@ -1,6 +1,6 @@
 from typing import Optional, Union, List
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 
 import databases
 import sqlalchemy
@@ -32,7 +32,7 @@ class BaseMeta(ormar.ModelMeta):
 
 
 
-class Files(ormar.Model):
+class File(ormar.Model):
     class Meta(BaseMeta):
         tablename = "files"
 
@@ -42,6 +42,29 @@ class Files(ormar.Model):
     mime_type: str = ormar.String(max_length=100)
     size: int = ormar.Integer()
     upload_at: datetime = ormar.DateTime(timezone=False)
+
+
+
+class User(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "users"
+
+    id: UUID = ormar.UUID(primary_key=True)
+    name: str = ormar.String(max_length=40)
+    description: Optional[str] = ormar.String(max_length=100, nullable=True)
+    tag: str = ormar.String(max_length=30)
+    birthdate: Optional[date] = ormar.Date(nullable=True)
+    photo: File = ormar.ForeignKey(File, nullable=True)
+
+
+
+class AuthData(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "auth_data"
+
+    user_id: User = ormar.ForeignKey(User)
+    login: UUID = ormar.String(max_length=200, primary_key=True)
+    pass_hash: str = ormar.String(max_length=200)
 
 
 

@@ -46,6 +46,6 @@ class FileUseCases():
 
 
 
-    async def download_file_by_download_id(self, download_id: UUID) -> str:
-        file_path = await self.__storage.get(download_id)
-        return file_path
+    async def download_file_by_download_id(self, download_id: UUID) -> bytes:
+        file_bytes = await self.__storage.get(download_id)
+        return file_bytes

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
-from rest_api import files_router
+from rest_api import files_router, register_routers, profile_routers, auth_routers
 import config
 
 
@@ -15,6 +15,9 @@ app.openapi = CustomServerAPI(app).get_openapi()
 
 
 app.include_router(files_router)
+app.include_router(register_routers)
+app.include_router(profile_routers)
+app.include_router(auth_routers)
 
 
 

@@ -1,1 +1,3 @@
-import auth
+"""
+API response/request data schemas
+"""

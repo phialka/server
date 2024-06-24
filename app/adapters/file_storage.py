@@ -16,5 +16,5 @@ class SystemFileStorage(FileStorage):
         return await self.__storage.save_file(bin_file, save_as)
 
 
-    async def get(self, download_id: UUID) -> str:
-        return await self.__storage.get_file_path(download_id)
+    async def get(self, download_id: UUID) -> bytes:
+        return await self.__storage.get_file(download_id)

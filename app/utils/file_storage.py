@@ -35,11 +35,11 @@ class Storage():
             file_in_storage.write(file.read())
         
         return True
-            
+
 
     async def get_file_path(self, file_name: str) -> str:
         """
-        Get a file by name from the storage
+        Get a file path by file name from the storage
         """
         fullpath = f'{self.__directory}/{file_name}'
 
@@ -49,17 +49,17 @@ class Storage():
             raise FileNotFoundError
 
 
-    # async def get_file(self, file_name: str) -> bytes:
-    #     """
-    #     Get a file by name from the storage
-    #     """
-    #     fullpath = f'{self.__directory}/{file_name}'
+    async def get_file(self, file_name: str) -> bytes:
+        """
+        Get a file by name from the storage
+        """
+        fullpath = f'{self.__directory}/{file_name}'
 
-    #     if os.path.exists(fullpath):
-    #         with open(f'{self.__directory}/{file_name}', 'rb') as file_in_storage:
-    #             return file_in_storage.read()
-    #     else:
-    #         raise FileNotFoundError
+        if os.path.exists(fullpath):
+            with open(f'{self.__directory}/{file_name}', 'rb') as file_in_storage:
+                return file_in_storage.read()
+        else:
+            raise FileNotFoundError
 
 
     async def delete_file(self, file_name: str) -> bool:

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
 from rest_api import files_router, register_routers, profile_routers, auth_routers
+from rest_api.exceptions import *
 import config
 
 
@@ -14,10 +15,17 @@ app.openapi = CustomServerAPI(app).get_openapi()
 
 
 
-app.include_router(files_router)
+app.include_router(auth_routers)
 app.include_router(register_routers)
 app.include_router(profile_routers)
-app.include_router(auth_routers)
+app.include_router(files_router)
+
+
+
+# exception handler for jwtauth
+app.add_exception_handler(AuthJWTException, authjwt_exception_handler)
+app.add_exception_handler(HTTPNotFoundError, http_not_found_exception_handler)
+app.add_exception_handler(HTTPUnprocessableEntity, http_unprocessable_entity_exception_handler)
 
 
 
@@ -39,15 +47,5 @@ async def mainpage():
 
 
 
-# # exception handler for jwtauth
-# @app.exception_handler(JWTAuth.auth_exeption)
-# def authjwt_exception_handler(request: Request, exc: JWTAuth.auth_exeption):
-#     return JSONResponse(
-#         status_code=exc.status_code,
-#         content={"detail": exc.message}
-#     )
-
-
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True, host=config.HOST, port=config.PORT)
-

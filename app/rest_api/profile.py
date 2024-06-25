@@ -6,7 +6,9 @@ from fastapi_jwt_auth import AuthJWT
 
 from entities import User
 from use_cases.profile_usecases import ProfileUseCases
+from use_cases.files_usecases import FileUseCases
 from adapters.file_repo import SQLFileRepo
+from adapters.file_storage import SystemFileStorage
 from adapters.auth_data_repo import SQLAuthDataRepo
 from adapters.user_repo import SQLUserRepo
 from .schemas.profile import UserCreate
@@ -27,7 +29,9 @@ register_routers = APIRouter(
 )
 
 
-uc = ProfileUseCases(SQLUserRepo(), SQLAuthDataRepo())
+
+file_uc = FileUseCases(SQLFileRepo(), SystemFileStorage(config.FILE_STORAGE))
+uc = ProfileUseCases(SQLUserRepo(), SQLAuthDataRepo(), file_uc)
 
 
 
@@ -37,7 +41,7 @@ uc = ProfileUseCases(SQLUserRepo(), SQLAuthDataRepo())
         response_model = User
         )
 async def register(user: UserCreate):
-    user = await uc.register(user.name, user.login, user.password)
+    user = await uc.register(user.name, user.login, user.password, user.tag, user.description, user.birthdate)
     return user
 
 

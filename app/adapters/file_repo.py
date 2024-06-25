@@ -2,6 +2,8 @@ from use_cases.abstracts import FileRepo
 from entities import File, FileFilter
 from database import tables
 
+from typing import Optional
+
 
 
 class SQLFileRepo(FileRepo):
@@ -40,11 +42,11 @@ class SQLFileRepo(FileRepo):
         return files
 
 
-    async def update(self, filter: FileFilter, **kwargs) -> int:
+    async def update(self, filter: Optional[FileFilter] = None, **kwargs) -> int:
         pass
 
 
-    async def delete(self, filter: FileFilter) -> int:
+    async def delete(self, filter: Optional[FileFilter] = None) -> int:
         if filter.file_id:
             files_count = await self.__table.objects.delete(self.__table.id == filter.file_id)
         else:

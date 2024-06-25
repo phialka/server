@@ -46,7 +46,7 @@ class Storage():
         if os.path.exists(fullpath):
             return fullpath
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError()
 
 
     async def get_file(self, file_name: str) -> bytes:
@@ -59,7 +59,7 @@ class Storage():
             with open(f'{self.__directory}/{file_name}', 'rb') as file_in_storage:
                 return file_in_storage.read()
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError()
 
 
     async def delete_file(self, file_name: str) -> bool:
@@ -71,6 +71,6 @@ class Storage():
         if os.path.exists(fullpath):
             os.remove(fullpath)
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError()
         
 

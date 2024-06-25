@@ -47,3 +47,49 @@ class UserFilter(BaseModel):
     user_id: Optional[UUID] = None
     tag: Optional[str] = None
     name: Optional[str] = None
+
+
+class Server(BaseModel):
+    server_id: UUID
+    owner_id: UUID
+    title: str
+    description: Optional[str] = None
+    logo: Optional[File] = None
+    created_at: datetime
+
+
+class Channel(BaseModel):
+    cnannel_id: UUID
+    server_id: UUID
+    title: str
+    description: Optional[str] = None
+    logo: Optional[File] = None
+    created_at: datetime
+
+
+class PrivateChat(BaseModel):
+    chat_id: UUID
+    members: list[User]
+
+
+class Attachment(BaseModel):
+    attach_type: str
+    file: File
+
+
+class Message(BaseModel):
+    message_id: UUID
+    author_id: UUID
+    content: Optional[str] = None
+    attachments: Optional[list[Attachment]] = None
+    reply_message_id: Optional[UUID] = None
+    updated_at: Optional[date] = None
+    created_at: datetime
+
+
+class ChannelMessage(Message):
+    sequence: int
+
+
+class PrivateMessage(Message):
+    sequence: int

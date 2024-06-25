@@ -1,6 +1,7 @@
 from use_cases.abstracts import AuthDataRepo
 from entities import AuthData, AuthDataFilter
 from database import tables
+from typing import Optional
 
 
 
@@ -8,6 +9,13 @@ class SQLAuthDataRepo(AuthDataRepo):
 
     def __init__(self) -> None:
         self.__table = tables.AuthData
+
+
+    def __serialize_filter(self, filter: AuthDataFilter):
+        """
+        Amazing filter serialization from data model to ORMAR style
+        """
+        return self.__table.login == filter.login
 
 
     async def save(self, data: AuthData) -> bool:
@@ -20,16 +28,16 @@ class SQLAuthDataRepo(AuthDataRepo):
         return True
 
 
-    async def get(self, filter: AuthDataFilter) -> list[AuthData]:
-        if filter.login:
-            auth_data = await self.__table.objects.all(self.__table.login == filter.login)
-            auth_data = [AuthData(
+    async def get(self, filter: Optional[AuthDataFilter] = None) -> list[AuthData]:
+        if filter:
+            auth_data = await self.__table.objects.all(self.__serialize_filter(filter))
+        else:
+            auth_data = await self.__table.objects.all()
+        auth_data = [AuthData(
                 user_id=ad.user_id.id,
                 login=ad.login,
                 password_hash=ad.pass_hash
                 ) for ad in auth_data]
-        else:
-            auth_data = []
 
         return auth_data
 
@@ -39,10 +47,7 @@ class SQLAuthDataRepo(AuthDataRepo):
 
 
     async def delete(self, filter: AuthDataFilter) -> int:
-        if filter.login:
-            count = await self.__table.objects.delete(self.__table.login == filter.login)
-        else:
-            count = 0
+        count = await self.__table.objects.delete(self.__serialize_filter(filter))
         return count
 
 

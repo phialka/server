@@ -42,6 +42,8 @@ class FileUseCases():
             filter = FileFilter(file_id=file_id)
             )
 
+        if len(files)<1:
+            raise FileNotFoundError()
         return files[0]
 
 

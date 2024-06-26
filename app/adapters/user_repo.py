@@ -3,6 +3,7 @@ from entities import User, UserFilter, File
 from database import tables
 
 from typing import Optional
+from datetime import date
 
 
 
@@ -18,11 +19,12 @@ class SQLUserRepo(UserRepo):
         """
         query = None
 
-        def __without_none(somthing):
+        def __without_none(somthing, query = query):
             if query:
-                query = query and somthing
+                query = somthing and query
             else:
                 query = somthing
+            return query
             
         if filter.user_id:
             query = __without_none(self.__table.id == filter.user_id)
@@ -30,6 +32,10 @@ class SQLUserRepo(UserRepo):
             query = __without_none(self.__table.name == filter.name)
         if filter.tag:
             query = __without_none(self.__table.tag == filter.tag)
+        if filter.name_search_prompt:
+            query = __without_none(self.__table.name.icontains(filter.name_search_prompt))
+        if filter.tag_search_prompt:
+            query = __without_none(self.__table.tag.icontains(filter.tag_search_prompt))
 
         return query
 
@@ -50,9 +56,9 @@ class SQLUserRepo(UserRepo):
 
     async def get(self, filter: Optional[UserFilter] = None) -> list[User]:
         if filter:
-            users = await self.__table.objects.all(self.__serialize_filter(filter))
+            users = await self.__table.objects.select_related('photo').all(self.__serialize_filter(filter))
         else:
-            users = await self.__table.objects.all()
+            users = await self.__table.objects.select_related('photo').all()
         users = [User(
             user_id=u.id,
             name=u.name,
@@ -72,10 +78,20 @@ class SQLUserRepo(UserRepo):
         return users
 
 
+    async def update(self, filter: Optional[UserFilter] = None, **kwargs) -> int:
+        if 'user_id' in kwargs:
+            raise
+        if 'photo' in kwargs:
+            kwargs['photo'] = None if not kwargs['photo'] else kwargs['photo'].file_id
+            
+        if not filter:
+            return await self.__table.objects.update(each=True, **kwargs)
+        if filter:
+            return await self.__table.objects.filter(self.__serialize_filter(filter)).update(**kwargs)
 
-    async def update(self, filter: UserFilter, **kwargs) -> int:
-        pass
 
-
-    async def delete(self, filter: UserFilter) -> int:
-        return await self.__table.objects.delete(self.__serialize_filter(filter))
+    async def delete(self, filter: Optional[UserFilter] = None) -> int:
+        if filter:
+            return await self.__table.objects.filter(self.__serialize_filter(filter)).delete()
+        else:
+            return await self.__table.objects.delete(each=True)

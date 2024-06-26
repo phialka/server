@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from entities import AuthData, AuthDataFilter
 from typing import Optional
 
+from pydantic import BaseModel
+
 
 
 class AuthDataRepo(ABC):
@@ -15,7 +17,10 @@ class AuthDataRepo(ABC):
         pass
 
     @abstractmethod
-    async def update(self, filter: Optional[AuthDataFilter] = None, **kwargs) -> int:
+    async def update(self, 
+                    filter: Optional[AuthDataFilter] = None,
+                    new_password: Optional[str] = None
+                    ) -> int:
         pass
 
     @abstractmethod

@@ -47,6 +47,9 @@ class UserFilter(BaseModel):
     user_id: Optional[UUID] = None
     tag: Optional[str] = None
     name: Optional[str] = None
+    tag_search_prompt: Optional[str] = None
+    name_search_prompt: Optional[str] = None
+
 
 
 class Server(BaseModel):
@@ -58,6 +61,15 @@ class Server(BaseModel):
     created_at: datetime
 
 
+
+class ServerFilter(BaseModel):
+    server_id: Optional[UUID] = None
+    owner_id: Optional[UUID] = None
+    title_search_prompt: Optional[str] = None
+    description_search_prompt: Optional[str] = None
+
+
+
 class Channel(BaseModel):
     cnannel_id: UUID
     server_id: UUID
@@ -67,14 +79,17 @@ class Channel(BaseModel):
     created_at: datetime
 
 
+
 class PrivateChat(BaseModel):
     chat_id: UUID
     members: list[User]
 
 
+
 class Attachment(BaseModel):
     attach_type: str
     file: File
+
 
 
 class Message(BaseModel):
@@ -87,9 +102,30 @@ class Message(BaseModel):
     created_at: datetime
 
 
+
 class ChannelMessage(Message):
+    channel_id: UUID
     sequence: int
+
 
 
 class PrivateMessage(Message):
+    chat_id: UUID
     sequence: int
+
+
+
+class MessageFilter(BaseModel):
+    message_id: Optional[UUID] = None
+    author_id: Optional[UUID] = None
+    reply_message_id: Optional[UUID] = None
+
+
+
+class ChannelMessageFilter(MessageFilter):
+    channel_id: Optional[UUID] = None
+
+
+
+class PrivateMessageFilter(MessageFilter):
+    chat_id: Optional[UUID] = None

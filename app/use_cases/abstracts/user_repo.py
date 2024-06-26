@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
-from entities import User, UserFilter
+from entities import User, UserFilter, File
+
+from typing import Optional
+from datetime import date
 
 
 
@@ -10,13 +13,13 @@ class UserRepo(ABC):
         pass
 
     @abstractmethod
-    async def get(self, filter: UserFilter) -> list[User]:
+    async def get(self, filter: Optional[UserFilter] = None) -> list[User]:
         pass
 
     @abstractmethod
-    async def update(self, filter: UserFilter, **kwargs) -> int:
+    async def update(self, filter: Optional[UserFilter] = None, **kwargs) -> int:
         pass
 
     @abstractmethod
-    async def delete(self, filter: UserFilter) -> int:
+    async def delete(self, filter: Optional[UserFilter] = None) -> int:
         pass

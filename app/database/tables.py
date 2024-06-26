@@ -54,7 +54,7 @@ class User(ormar.Model):
     description: Optional[str] = ormar.String(max_length=100, nullable=True)
     tag: str = ormar.String(max_length=30)
     birthdate: Optional[date] = ormar.Date(nullable=True)
-    photo: File = ormar.ForeignKey(File, nullable=True)
+    photo: File = ormar.ForeignKey(File, nullable=True, ondelete=ormar.ReferentialAction.SET_NULL)
 
 
 
@@ -62,7 +62,7 @@ class AuthData(ormar.Model):
     class Meta(BaseMeta):
         tablename = "auth_data"
 
-    user_id: User = ormar.ForeignKey(User)
+    user_id: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.CASCADE)
     login: UUID = ormar.String(max_length=200, primary_key=True)
     pass_hash: str = ormar.String(max_length=200)
 

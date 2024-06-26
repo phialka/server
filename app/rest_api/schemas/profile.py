@@ -10,3 +10,11 @@ class UserCreate(BaseModel):
     tag: Optional[str] = None
     login: str
     password: str
+
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    birthdate: Optional[date] = None
+    tag: Optional[str] = None

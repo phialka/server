@@ -8,3 +8,4 @@ JWT_SECRET_KEY = __values["JWT_SECRET_KEY"]
 FILE_STORAGE=__values["FILE_STORAGE"]
 HOST=__values["HOST"]
 PORT=int(__values["PORT"])
+USER_TAG_PREFIX=__values["USER_TAG_PREFIX"]

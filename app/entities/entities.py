@@ -70,8 +70,20 @@ class ServerFilter(BaseModel):
 
 
 
+class ServerMember(BaseModel):
+    server_id: UUID
+    user: User
+
+
+
+class ServerMemberFilter(BaseModel):
+    server_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+
+
+
 class Channel(BaseModel):
-    cnannel_id: UUID
+    channel_id: UUID
     server_id: UUID
     title: str
     description: Optional[str] = None
@@ -80,9 +92,21 @@ class Channel(BaseModel):
 
 
 
+class ChannelFilter(BaseModel):
+    channel_id: Optional[UUID] = None
+    server_id: Optional[UUID] = None
+
+
+
 class PrivateChat(BaseModel):
     chat_id: UUID
     members: list[User]
+
+
+
+class PrivateChatFilter(BaseModel):
+    chat_id: Optional[UUID] = None
+    member_ids: Optional[list[UUID]] = None
 
 
 

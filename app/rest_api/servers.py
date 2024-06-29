@@ -5,12 +5,14 @@ from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 
-from entities import Server, File, Channel
+from entities import Server, File, Channel, User
 from use_cases.server_usecases import ServerUseCases
 from use_cases.files_usecases import FileUseCases
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 from adapters.server_repo import SQLServerRepo
+from adapters.channel_repo import SQLChannelRepo
+from adapters.server_member_repo import SQLServerMemberRepo
 
 from .schemas.servers import ServerCreate, ServerUpdate
 
@@ -29,11 +31,13 @@ server_routers = APIRouter(
 
 server_repo = SQLServerRepo()
 file_repo = SQLFileRepo()
+channel_repo = SQLChannelRepo()
+member_repo = SQLServerMemberRepo()
 file_storage = SystemFileStorage(config.FILE_STORAGE)
 
 
 file_uc = FileUseCases(file_repo, file_storage)
-server_uc = ServerUseCases(server_repo, file_uc)
+server_uc = ServerUseCases(server_repo, member_repo, channel_repo, file_uc)
 
 
 
@@ -114,3 +118,27 @@ async def set_server_logo(server_id: UUID, auth: AuthJWT = Depends()):
     user_id = UUID(auth.get_jwt_subject())
 
     return await server_uc.delete_server_logo(server_id=server_id, requester_id=user_id)
+
+
+
+@server_routers.get(
+        "/{server_id}/getChannels", 
+        summary = 'Получить список текстовых каналов на сервере',
+        response_model = list[Channel]
+        )
+async def get_server_channels(server_id: UUID, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+
+    return await server_uc.get_channels(server_id)
+
+
+
+@server_routers.get(
+        "/{server_id}/getMembers", 
+        summary = 'Получить список пользователей сервера',
+        response_model = list[User]
+        )
+async def get_server_members(server_id: UUID, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+
+    return await server_uc.get_server_members(server_id)

@@ -28,7 +28,7 @@ class SQLServerMemberRepo(ABC):
             return query
 
         if filter.server_id:
-            query = __without_none(self.__table.id == filter.server_id)
+            query = __without_none(self.__table.server.id == filter.server_id)
         if filter.user_id:
             query = __without_none(self.__table.user.id == filter.user_id)
 
@@ -47,11 +47,11 @@ class SQLServerMemberRepo(ABC):
 
     async def get(self, filter: Optional[ServerMemberFilter] = None) -> list[ServerMember]:
         if filter:
-            members = await self.__table.objects.select_related('user').all(self.__serialize_filter(filter))
+            members = await self.__table.objects.select_related(['user', 'user__photo']).all(self.__serialize_filter(filter))
         else:
-            members = await self.__table.objects.select_related('user').all()
+            members = await self.__table.objects.select_related(['user', 'user__photo']).all()
         members = [ServerMember(
-            server_id=m.server_id, 
+            server_id=m.server.id, 
             user=User(
                 user_id=m.user.id,
                 name=m.user.name,

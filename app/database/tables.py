@@ -159,7 +159,7 @@ class ChannelMessage(ormar.Model):
 
 class PrivateMessage(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "channel_messages"
+        tablename = "private_messages"
 
     id: UUID = ormar.UUID(primary_key=True)
     private_chat: PrivateChat = ormar.ForeignKey(PrivateChat, ondelete=ormar.ReferentialAction.CASCADE)

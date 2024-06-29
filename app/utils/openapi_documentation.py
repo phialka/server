@@ -14,8 +14,8 @@ class CustomServerAPI():
 
             openapi_schema = get_openapi(
                 title=config.SERVER_NAME,
-                version="alpha",
-                description="Phialka server",
+                version="MVP v1.0",
+                description="Phialka server REST API",
                 routes=self.app.routes,
             )
 

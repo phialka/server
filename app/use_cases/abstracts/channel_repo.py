@@ -6,7 +6,7 @@ from datetime import date
 
 
 
-class ChannelRepo():
+class ChannelRepo(ABC):
 
     @abstractmethod
     async def save(self, channel: Channel) -> bool:

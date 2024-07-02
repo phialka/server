@@ -43,12 +43,11 @@ uc = ProfileUseCases(user_repo, auth_repo, file_uc)
 
 @register_routers.post(
         "", 
-        summary = 'Создать профиль',
-        response_model = User
+        summary = 'Создать профиль'
         )
 async def register(user: UserCreate):
-    user = await uc.register(user.name, user.login, user.password, user.tag, user.description, user.birthdate)
-    return user
+    await uc.register(user.name, user.login, user.password, user.tag, user.description, user.birthdate)
+    return
 
 
 
@@ -80,13 +79,12 @@ async def get_profile(auth: AuthJWT = Depends()):
 
 @profile_routers.patch(
         "", 
-        summary = 'Редактировать свой профиль',
-        response_model = User
+        summary = 'Редактировать свой профиль'
         )
 async def edit_profile(data: UserUpdate, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = auth.get_jwt_subject()
-    user = await uc.update_profile(
+    await uc.update_profile(
         user_id = user_id,
         requester_id = user_id,
         new_name = data.name,
@@ -95,22 +93,21 @@ async def edit_profile(data: UserUpdate, auth: AuthJWT = Depends()):
         new_birthdate = data.birthdate
         )
     
-    return user
+    return
 
 
 
 @profile_routers.put(
         "/photo", 
-        summary = 'Установить фото профиля',
-        response_model = File
+        summary = 'Установить фото профиля'
         )
 async def set_profile_photo(photo: UploadFile, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = auth.get_jwt_subject()
     
-    profile_photo = await uc.set_profile_photo(photo=photo.file, user_id=user_id, requester_id=user_id)
+    await uc.set_profile_photo(photo=photo.file, user_id=user_id, requester_id=user_id)
     
-    return profile_photo
+    return
 
 
 

@@ -96,7 +96,7 @@ class Channel(ormar.Model):
 
 class PrivateChat(ormar.Model):
     class Meta(BaseMeta):
-        tablename = "private_chat"
+        tablename = "private_chats"
 
     id: UUID = ormar.UUID(primary_key=True)
 
@@ -117,7 +117,7 @@ class PrivateChatMember(ormar.Model):
         tablename = "private_chat_members"
 
     id: UUID = ormar.UUID(primary_key=True)
-    private_chat: PrivateChat = ormar.ForeignKey(Server, ondelete=ormar.ReferentialAction.CASCADE)
+    private_chat: PrivateChat = ormar.ForeignKey(PrivateChat, ondelete=ormar.ReferentialAction.CASCADE)
     user: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.CASCADE)
 
 

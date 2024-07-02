@@ -8,10 +8,13 @@ from fastapi_jwt_auth import AuthJWT
 from entities import Server, File, Channel, User
 from use_cases.server_usecases import ServerUseCases
 from use_cases.files_usecases import FileUseCases
+from use_cases.user_usecases import UserUseCases
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 from adapters.server_repo import SQLServerRepo
 from adapters.channel_repo import SQLChannelRepo
+from adapters.user_repo import SQLUserRepo
+from adapters.auth_data_repo import SQLAuthDataRepo
 from adapters.server_member_repo import SQLServerMemberRepo
 
 from .schemas.servers import ServerCreate, ServerUpdate
@@ -37,38 +40,41 @@ file_storage = SystemFileStorage(config.FILE_STORAGE)
 
 
 file_uc = FileUseCases(file_repo, file_storage)
-server_uc = ServerUseCases(server_repo, member_repo, channel_repo, file_uc)
+user_uc = UserUseCases(SQLUserRepo(), SQLAuthDataRepo())
+server_uc = ServerUseCases(server_repo, member_repo, channel_repo, user_uc, file_uc)
 
 
 
 @server_routers.post(
         "", 
-        summary = 'Создать сервер',
-        response_model = Server
+        summary = 'Создать сервер'
         )
 async def create_server(data: ServerCreate, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = auth.get_jwt_subject()
 
-    return await server_uc.create_server(owner_id=user_id, title=data.title, description=data.description)
+    await server_uc.create_server(owner_id=user_id, title=data.title, description=data.description)
+
+    return
 
 
 
 @server_routers.patch(
         "/{server_id}", 
-        summary = 'Редактировать сервер',
-        response_model = Server
+        summary = 'Редактировать сервер'
         )
 async def edit_server(data: ServerUpdate, server_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = UUID(auth.get_jwt_subject())
 
-    return await server_uc.edit_server(
+    await server_uc.edit_server(
         server_id=server_id, 
         requester_id=user_id, 
         new_title=data.title, 
         new_description=data.description
         )
+    
+    return
 
 
 
@@ -105,7 +111,9 @@ async def set_server_logo(server_id: UUID, logo: UploadFile, auth: AuthJWT = Dep
     auth.jwt_required()
     user_id = UUID(auth.get_jwt_subject())
 
-    return await server_uc.set_server_logo(server_id, requester_id=user_id, logo=logo.file)
+    await server_uc.set_server_logo(server_id, requester_id=user_id, logo=logo.file)
+
+    return
 
 
 

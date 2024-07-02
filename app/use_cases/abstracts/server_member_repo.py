@@ -9,7 +9,7 @@ from datetime import date
 class ServerMemberRepo(ABC):
 
     @abstractmethod
-    async def save(self, server: ServerMember) -> bool:
+    async def save(self, member: ServerMember) -> bool:
         pass
 
     @abstractmethod

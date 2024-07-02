@@ -4,19 +4,21 @@ from hashlib import md5
 from datetime import datetime
 from typing import Optional
 
-from entities import Server, ServerFilter, ServerMember, ServerMemberFilter, User, Channel, ChannelFilter
+from entities import Server, ServerFilter, ServerMember, ServerMemberFilter, User, Channel, ChannelFilter, UserFilter
 from .abstracts import ServerRepo, ServerMemberRepo, ChannelRepo
 from .exceptions import UserAlreadyExist, UserTagAlreadyExist, ForbiddenError
 
 from use_cases.files_usecases import FileUseCases
+from use_cases.user_usecases import UserUseCases
 
 
 
 class ServerUseCases():
-    def __init__(self, server_repo: ServerRepo, member_repo: ServerMemberRepo, channel_repo: ChannelRepo, file_uc: FileUseCases) -> None:
+    def __init__(self, server_repo: ServerRepo, member_repo: ServerMemberRepo, channel_repo: ChannelRepo, user_uc: UserUseCases, file_uc: FileUseCases) -> None:
         self.__server_repo: ServerRepo = server_repo
         self.__member_repo: ServerMemberRepo = member_repo
         self.__channel_repo: ChannelRepo = channel_repo
+        self.__user_uc: UserUseCases = user_uc
         self.__file_uc: FileUseCases = file_uc
 
     
@@ -25,6 +27,8 @@ class ServerUseCases():
 
 
     async def create_server(self, owner_id: UUID, title: str, description: Optional[str] = None) -> Server:
+        owner = await self.__user_uc.get_user_by_id(owner_id)
+
         server = Server(
             server_id = uuid4(),
             owner_id = owner_id,
@@ -35,6 +39,7 @@ class ServerUseCases():
         )
 
         await self.__server_repo.save(server)
+        await self.__member_repo.save(ServerMember(server_id=server.server_id, user=owner))
 
         return server
     

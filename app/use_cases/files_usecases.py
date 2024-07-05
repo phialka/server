@@ -4,7 +4,8 @@ from hashlib import md5
 from datetime import datetime
 from mimetypes import guess_type
 
-from entities import File, FileFilter
+from entities import File
+from .datamodels.filters import FileFilter
 from .abstracts import FileRepo, FileStorage
 
 

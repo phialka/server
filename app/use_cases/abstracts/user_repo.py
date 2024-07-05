@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import User, UserFilter, File
+from entities import User, File
+from ..datamodels.filters import UserFilter
 
 from typing import Optional
 from datetime import date

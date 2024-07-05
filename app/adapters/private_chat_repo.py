@@ -1,4 +1,5 @@
-from entities import PrivateChat, PrivateChatFilter, User, File
+from entities import PrivateChat, User, File
+from use_cases.datamodels.filters import PrivateChatFilter
 from use_cases.abstracts import PrivateChatRepo
 
 from typing import Optional
@@ -34,7 +35,7 @@ class SQLPrivateChatRepo(PrivateChatRepo):
         if filter.member_ids:
             or_set = None
             for usr_id in filter.member_ids:
-                or_set = __without_none(self.__member_table.user.id == usr_id, or_set, lambda a, b: a or b)
+                or_set = __without_none(self.__member_table.user.id == usr_id, or_set, lambda a, b: a and b)
             member_query = __without_none(or_set, member_query)
 
         return chat_query, member_query
@@ -111,7 +112,6 @@ class SQLPrivateChatRepo(PrivateChatRepo):
                 if [c.chat_id for c in chat_list].count(chat.chat_id) > 1:
                     chat_list.remove(chat)
             return chat_list
-
 
 
     async def update(self, filter: Optional[PrivateChatFilter] = None, **kwargs) -> int:

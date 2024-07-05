@@ -6,18 +6,15 @@ from datetime import datetime, date
 
 
 class File(BaseModel):
+    '''
+    Datamodel with file data
+    '''
     file_id: UUID
     download_id: UUID
     size: ByteSize
     hash: str
     mime_type: str
     upload_at: datetime
-
-
-
-class FileFilter(BaseModel):
-    file_id: Optional[UUID] = None
-    download_id: Optional[UUID] = None
 
 
 
@@ -28,12 +25,10 @@ class AuthData(BaseModel):
 
 
 
-class AuthDataFilter(BaseModel):
-    login: Optional[str] = None
-
-
-
 class User(BaseModel):
+    '''
+    Datamodel with user profile data
+    '''
     user_id: UUID
     name: str
     description: Optional[str] = None
@@ -43,16 +38,10 @@ class User(BaseModel):
 
 
 
-class UserFilter(BaseModel):
-    user_id: Optional[UUID] = None
-    tag: Optional[str] = None
-    name: Optional[str] = None
-    tag_search_prompt: Optional[str] = None
-    name_search_prompt: Optional[str] = None
-
-
-
 class Server(BaseModel):
+    '''
+    Datamodel with server data
+    '''
     server_id: UUID
     owner_id: UUID
     title: str
@@ -62,27 +51,19 @@ class Server(BaseModel):
 
 
 
-class ServerFilter(BaseModel):
-    server_id: Optional[UUID] = None
-    owner_id: Optional[UUID] = None
-    title_search_prompt: Optional[str] = None
-    description_search_prompt: Optional[str] = None
-
-
-
 class ServerMember(BaseModel):
+    '''
+    Datamodel with server member data
+    '''
     server_id: UUID
     user: User
 
 
 
-class ServerMemberFilter(BaseModel):
-    server_id: Optional[UUID] = None
-    user_id: Optional[UUID] = None
-
-
-
 class Channel(BaseModel):
+    '''
+    Datamodel with test channel data
+    '''
     channel_id: UUID
     server_id: UUID
     title: str
@@ -92,31 +73,38 @@ class Channel(BaseModel):
 
 
 
-class ChannelFilter(BaseModel):
-    channel_id: Optional[UUID] = None
-    server_id: Optional[UUID] = None
-
-
-
 class PrivateChat(BaseModel):
+    '''
+    Dataclass with private chat data
+
+    *there can be only two members
+    '''
     chat_id: UUID
     members: list[User]
 
 
 
-class PrivateChatFilter(BaseModel):
-    chat_id: Optional[UUID] = None
-    member_ids: Optional[list[UUID]] = None
-
-
-
 class Attachment(BaseModel):
+    '''
+    Dataclass with attachment data
+
+    attach types:
+    - file
+    - media
+    '''
+    message_id: UUID
     attach_type: str
     file: File
 
 
 
 class Message(BaseModel):
+    '''
+    Datamodel with message data
+
+    Message is independent entity.
+    In future message can be a part of a channel message or a private message.
+    '''
     message_id: UUID
     author_id: UUID
     content: Optional[str] = None
@@ -127,29 +115,24 @@ class Message(BaseModel):
 
 
 
-class ChannelMessage(Message):
+class ChannelMessage(BaseModel):
+    '''
+    Dataclass with channel message data
+
+    *sequence is a serial number of the message in the text channel
+    '''
+    message: Message
     channel_id: UUID
     sequence: int
 
 
 
-class PrivateMessage(Message):
+class PrivateMessage(BaseModel):
+    '''
+    Dataclass with channel message data
+
+    *sequence is a serial number of the message in the private chat
+    '''
+    message: Message
     chat_id: UUID
     sequence: int
-
-
-
-class MessageFilter(BaseModel):
-    message_id: Optional[UUID] = None
-    author_id: Optional[UUID] = None
-    reply_message_id: Optional[UUID] = None
-
-
-
-class ChannelMessageFilter(MessageFilter):
-    channel_id: Optional[UUID] = None
-
-
-
-class PrivateMessageFilter(MessageFilter):
-    chat_id: Optional[UUID] = None

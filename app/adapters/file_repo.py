@@ -1,5 +1,7 @@
 from use_cases.abstracts import FileRepo
-from entities import File, FileFilter
+from entities import File
+from use_cases.datamodels.filters import FileFilter
+
 from database import tables
 
 from typing import Optional

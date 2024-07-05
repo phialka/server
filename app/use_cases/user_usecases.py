@@ -4,7 +4,8 @@ from hashlib import md5
 from datetime import datetime
 from typing import Optional
 
-from entities import User, UserFilter, AuthData
+from entities import User, AuthData
+from .datamodels.filters import UserFilter
 from .abstracts import UserRepo, AuthDataRepo
 from .exceptions import UserNotFoundError, ForbiddenError
 

@@ -1,5 +1,6 @@
 from use_cases.abstracts import ChannelRepo
-from entities import Channel, ChannelFilter, File
+from entities import Channel, File
+from use_cases.datamodels.filters import ChannelFilter
 
 from typing import Optional
 from datetime import date

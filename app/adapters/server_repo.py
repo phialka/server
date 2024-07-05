@@ -1,5 +1,6 @@
 from use_cases.abstracts import ServerRepo
-from entities import Server, ServerFilter, File
+from entities import Server, File
+from use_cases.datamodels.filters import ServerFilter
 
 from typing import Optional
 from datetime import date

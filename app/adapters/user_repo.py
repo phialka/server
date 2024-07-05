@@ -1,5 +1,6 @@
 from use_cases.abstracts import UserRepo
-from entities import User, UserFilter, File
+from entities import User, File
+from use_cases.datamodels.filters import UserFilter
 from database import tables
 
 from typing import Optional

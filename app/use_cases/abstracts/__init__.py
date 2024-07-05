@@ -10,3 +10,4 @@ from .server_repo import ServerRepo
 from .server_member_repo import ServerMemberRepo
 from .channel_repo import ChannelRepo
 from .private_chat_repo import PrivateChatRepo
+from .message_repo import MessageRepo, ChannelMessageRepo, PrivateMessageRepo

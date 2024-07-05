@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import AuthData, AuthDataFilter
+from entities import AuthData
+from ..datamodels.filters import AuthDataFilter
 from typing import Optional
 
 from pydantic import BaseModel

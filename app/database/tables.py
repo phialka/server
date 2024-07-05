@@ -128,9 +128,9 @@ class Message(ormar.Model):
 
     id: UUID = ormar.UUID(primary_key=True)
     author: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.SET_NULL, nullable=True)
-    content: str = ormar.Text()
+    content: str = ormar.Text(nullable=True)
     created_at: Optional[datetime] = ormar.DateTime()
-    updated_at: Optional[datetime] = ormar.DateTime()
+    updated_at: Optional[datetime] = ormar.DateTime(nullable=True)
 
 
 
@@ -153,7 +153,7 @@ class ChannelMessage(ormar.Model):
     channel: Channel = ormar.ForeignKey(Channel, ondelete=ormar.ReferentialAction.CASCADE)
     message: Message = ormar.ForeignKey(Message, ondelete=ormar.ReferentialAction.CASCADE)
     was_viewed: bool = ormar.Boolean(default=False)
-    sequence: int = ormar.Integer(autoincrement=True)
+    sequence: int = ormar.Integer()
 
 
 
@@ -165,7 +165,7 @@ class PrivateMessage(ormar.Model):
     private_chat: PrivateChat = ormar.ForeignKey(PrivateChat, ondelete=ormar.ReferentialAction.CASCADE)
     message: Message = ormar.ForeignKey(Message, ondelete=ormar.ReferentialAction.CASCADE)
     was_viewed: bool = ormar.Boolean(default=False)
-    sequence: int = ormar.Integer(autoincrement=True)
+    sequence: int = ormar.Integer()
 
 
 

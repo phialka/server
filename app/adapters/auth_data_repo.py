@@ -1,5 +1,7 @@
 from use_cases.abstracts import AuthDataRepo
-from entities import AuthData, AuthDataFilter
+from entities import AuthData
+from use_cases.datamodels.filters import AuthDataFilter
+
 from database import tables
 from typing import Optional
 

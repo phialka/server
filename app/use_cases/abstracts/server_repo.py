@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import Server, ServerFilter
+from entities import Server
+from ..datamodels.filters import ServerFilter
 
 from typing import Optional
 from datetime import date

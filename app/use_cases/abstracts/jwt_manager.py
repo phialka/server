@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 
-class JWTManager():
+class JWTManager(ABC):
     def __init__(self) -> None:
         pass
 

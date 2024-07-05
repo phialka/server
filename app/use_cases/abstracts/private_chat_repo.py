@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import PrivateChat, PrivateChatFilter
+from entities import PrivateChat
+from ..datamodels.filters import PrivateChatFilter
 
 from typing import Optional
 

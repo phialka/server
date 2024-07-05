@@ -4,7 +4,8 @@ from hashlib import md5
 from datetime import datetime
 from typing import Optional
 
-from entities import Channel, ChannelFilter, ServerFilter
+from entities import Channel
+from .datamodels.filters import ChannelFilter, ServerFilter
 from .abstracts import ChannelRepo, ServerRepo
 from .exceptions import UserAlreadyExist, UserTagAlreadyExist, ForbiddenError
 

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import Channel, ChannelFilter
+from entities import Channel
+from ..datamodels.filters import ChannelFilter
 
 from typing import Optional
 from datetime import date

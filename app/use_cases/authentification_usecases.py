@@ -1,4 +1,5 @@
-from entities import AuthData, AuthDataFilter
+from entities import AuthData
+from .datamodels.filters import AuthDataFilter
 from .abstracts import AuthDataRepo, JWTManager
 from .exceptions import UncorerctLogin, UncorrectPassword
 from hashlib import md5

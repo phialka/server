@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities import File, FileFilter
+from entities import File
+from ..datamodels.filters import FileFilter
 
 
 

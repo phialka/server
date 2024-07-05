@@ -19,6 +19,7 @@ from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 
 from .schemas.channels import ChannelCreate, ChannelUpdate
+from .schemas.messages import MessageUpdate
 
 
 import config
@@ -63,13 +64,26 @@ async def get_message_by_id(message_id: UUID, auth: AuthJWT = Depends()):
 
 @message_routers.delete(
         "/messages/{message_id}", 
-        summary = 'Удвлить сообщение по ID'
+        summary = 'Удалить сообщение по ID'
         )
 async def delete_message_by_id(message_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = UUID(auth.get_jwt_subject())
 
     pass
+
+
+
+@message_routers.patch(
+        "/messages/{message_id}", 
+        summary = 'Редактировать сообщение по ID'
+        )
+async def edit_message_by_id(message_id: UUID, msg_data: MessageUpdate, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+    user_id = UUID(auth.get_jwt_subject())
+
+    await message_uc.edit_message(requester_id=user_id, message_id=message_id, content=msg_data.content)
+
 
 
 @message_routers.post(
@@ -105,11 +119,25 @@ async def send_message_to_channel(channel_id: UUID, msg: MessageCerate, auth: Au
 @message_routers.get(
         "/private/{chat_id}/messages", 
         summary = 'Получить сообщения из приватного чата',
-        response_model = list[Message],
+        response_model = list[PrivateMessage],
         tags=['private']
         )
-async def get_message_from_chat(chat_id: UUID, sequence: int, count: Optional[int] = 10, auth: AuthJWT = Depends()):
+async def get_messages_from_chat(chat_id: UUID, sequence: int, count: Optional[int] = 10, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = UUID(auth.get_jwt_subject())
 
     return await message_uc.get_private_chat_messages(requester_id=user_id, chat_id=chat_id, sequence_min=sequence, count=count)
+
+
+
+@message_routers.get(
+        "/channel/{channel_id}/messages", 
+        summary = 'Получить сообщения из текстового канала',
+        response_model = list[ChannelMessage],
+        tags=['channels']
+        )
+async def get_messages_from_chat(channel_id: UUID, sequence: int, count: Optional[int] = 10, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+    user_id = UUID(auth.get_jwt_subject())
+
+    return await message_uc.get_channel_messages(requester_id=user_id, channel_id=channel_id, sequence_min=sequence, count=count)

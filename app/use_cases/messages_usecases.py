@@ -126,7 +126,7 @@ class MessageUseCases():
             requester_id: UUID,
             channel_id: UUID,
             msg_data: MessageCerate
-            ):
+            ) -> ChannelMessage:
         
         channel = await self.__channel_uc.get_channel_by_id(channel_id=channel_id)
 
@@ -162,7 +162,7 @@ class MessageUseCases():
         return msgs[0:count]
 
 
-    async def get_message_by_id(self, requester_id: UUID, message_id: UUID):
+    async def get_message_by_id(self, requester_id: UUID, message_id: UUID) -> Message:
         msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
 
         if len(msgs) == 0:
@@ -171,10 +171,30 @@ class MessageUseCases():
         return msgs[0]
 
 
+    async def edit_message(self, requester_id: UUID, message_id: UUID, content: str) -> None:
+        msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
+        
+        if len(msgs) == 0:
+            raise
 
-    async def edit_message(self):
-        pass
+        if msgs[0].author_id != requester_id:
+            raise ForbiddenError()
+        
+        await self.__msg_repo.update(filter=MessageFilter(message_id=message_id), content=content)
+
+        return
 
 
-    async def delete_message(self):
-        pass
+    async def delete_message(self, requester_id: UUID, message_id: UUID) -> None:
+        msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
+        
+        if len(msgs) == 0:
+            raise
+
+        if msgs[0].author_id != requester_id:
+            raise ForbiddenError()
+        
+        await self.__msg_repo.delete(filter=MessageFilter(message_id=message_id))
+
+        return
+

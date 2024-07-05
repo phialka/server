@@ -17,7 +17,7 @@ from adapters.user_repo import SQLUserRepo
 from adapters.auth_data_repo import SQLAuthDataRepo
 from adapters.server_member_repo import SQLServerMemberRepo
 
-from .schemas.servers import ServerCreate, ServerUpdate
+from .schemas.servers import ServerCreate, ServerUpdate, UserInvite
 
 
 import config
@@ -56,6 +56,18 @@ async def create_server(data: ServerCreate, auth: AuthJWT = Depends()):
     await server_uc.create_server(owner_id=user_id, title=data.title, description=data.description)
 
     return
+
+
+
+@server_routers.get(
+        "/search", 
+        summary = 'Поиск серверов по запросу',
+        response_model = list[Server]
+        )
+async def search_server(prompt: str, offset: Optional[int] = 0, count: Optional[int] = 10, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+
+    return await server_uc.search_servers_by_prompt(prompt=prompt, count=count, offset=offset)
 
 
 
@@ -121,7 +133,7 @@ async def set_server_logo(server_id: UUID, logo: UploadFile, auth: AuthJWT = Dep
         "/{server_id}/logo", 
         summary = 'Удалить логотип сервера'
         )
-async def set_server_logo(server_id: UUID, auth: AuthJWT = Depends()):
+async def delete_server_logo(server_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
     user_id = UUID(auth.get_jwt_subject())
 
@@ -150,3 +162,29 @@ async def get_server_members(server_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
 
     return await server_uc.get_server_members(server_id)
+
+
+
+@server_routers.post(
+        "/{server_id}/join", 
+        summary = 'Присоединиться к серверу'
+        )
+async def join_to_channel(server_id: UUID, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+    user_id = UUID(auth.get_jwt_subject())
+
+    await server_uc.user_join_to_server(requester_id=user_id, server_id=server_id)
+    return
+
+
+
+@server_routers.post(
+        "/{server_id}/invite", 
+        summary = 'Пригласить пользователя на сервер'
+        )
+async def invite_user_to_channel(server_id: UUID, user: UserInvite, auth: AuthJWT = Depends()):
+    auth.jwt_required()
+    user_id = UUID(auth.get_jwt_subject())
+
+    await server_uc.invite_user_to_server(requester_id=user_id, user_id=user.user_id, server_id=server_id)
+    return

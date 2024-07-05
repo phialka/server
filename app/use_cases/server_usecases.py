@@ -54,7 +54,7 @@ class ServerUseCases():
         return servers[0]
     
 
-    async def edit_server(self, server_id: UUID, requester_id: UUID, new_title: Optional[str] = None, new_description: Optional[str] = None) -> Server:
+    async def edit_server(self, server_id: UUID, requester_id: UUID, new_title: Optional[str] = None, new_description: Optional[str] = None) -> None:
         server_before_edit = await self.get_server_by_id(server_id)
 
         if requester_id != server_before_edit.owner_id:
@@ -69,10 +69,10 @@ class ServerUseCases():
                 raise
 
         await self.__server_repo.update(filter=ServerFilter(server_id=server_id), **fields_to_update)
-        return await self.get_server_by_id(server_id)
+        return
 
 
-    async def delete_server(self, requester_id: UUID, server_id: UUID) -> bool:
+    async def delete_server(self, requester_id: UUID, server_id: UUID) -> None:
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
@@ -80,10 +80,10 @@ class ServerUseCases():
         
         await self.__server_repo.delete(filter=ServerFilter(server_id=server_id))
 
-        return True
+        return
     
 
-    async def set_server_logo(self, server_id: UUID, requester_id: UUID, logo: BinaryIO):
+    async def set_server_logo(self, server_id: UUID, requester_id: UUID, logo: BinaryIO) -> None:
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
@@ -93,10 +93,10 @@ class ServerUseCases():
 
         await self.__server_repo.update(filter=ServerFilter(server_id=server_id), logo=server_logo)
 
-        return server_logo
+        return 
 
 
-    async def delete_server_logo(self, server_id: UUID, requester_id: UUID):
+    async def delete_server_logo(self, server_id: UUID, requester_id: UUID) -> None:
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
@@ -104,7 +104,7 @@ class ServerUseCases():
         
         await self.__server_repo.update(filter=ServerFilter(server_id=server_id), logo=None)
 
-        return True
+        return
 
 
     async def get_server_members(self, server_id: UUID, count: Optional[int] = 100, offset: Optional[int] = 0) -> list[User]:
@@ -115,3 +115,54 @@ class ServerUseCases():
     async def get_channels(self, server_id: UUID) -> list[Channel]:
         channels = await self.__channel_repo.get(filter=ChannelFilter(server_id=server_id))
         return channels
+    
+
+    async def get_user_servers(self, user_id: UUID) -> list[Server]:
+        user = await self.__user_uc.get_user_by_id(user_id=user_id)
+
+        members = await self.__member_repo.get(filter=ServerMemberFilter(user_id=user_id))
+
+        server_ids = [m.server_id for m in members]
+
+        servers = []
+        for server_id in server_ids:
+            servers.append(await self.__server_repo.get(filter=ServerFilter(server_id=server_id)))
+
+        return servers
+
+
+    async def search_servers_by_prompt(self, prompt: str, count: int, offset: str) -> list[Server]:
+        servers = await self.__server_repo.get(filter=ServerFilter(title_search_prompt=prompt))
+
+        return servers[offset:offset+count]
+    
+
+    async def user_join_to_server(self, requester_id: UUID, server_id: UUID) -> None:
+        user = await self.__user_uc.get_user_by_id(user_id=requester_id)
+
+        new_member = ServerMember(server_id=server_id, user=user)
+
+        try:
+            await self.__member_repo.save(new_member)
+        except:
+            raise
+
+        return
+    
+
+    async def invite_user_to_server(self, requester_id: UUID, user_id: UUID, server_id: UUID) -> None:
+        user = await self.__user_uc.get_user_by_id(user_id=user_id)
+
+        server_members_like_requester = await self.__member_repo.get(filter=ServerMemberFilter(user_id=requester_id))
+
+        if len(server_members_like_requester) == 0:
+            raise
+
+        new_member = ServerMember(server_id=server_id, user=user)
+
+        try:
+            await self.__member_repo.save(new_member)
+        except:
+            raise
+
+        return

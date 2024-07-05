@@ -7,7 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 
 from entities import File
 from use_cases.files_usecases import FileUseCases
-from .exceptions import HTTPNotFoundError
+from .exception_handlers import HTTPNotFoundError
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 

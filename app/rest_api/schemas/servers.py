@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
+from uuid import UUID
 
 
 
@@ -15,3 +16,5 @@ class ServerUpdate(BaseModel):
     description: Optional[str] = None
 
 
+class UserInvite(BaseModel):
+    user_id: UUID

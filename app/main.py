@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
 from rest_api import files_router, register_routers, profile_routers, auth_routers, users_routers, server_routers, channel_routers, private_chat_routers, message_routers
-from rest_api.exceptions import *
+from rest_api.exception_handlers import *
 import config
 
 
@@ -20,10 +20,10 @@ app.include_router(register_routers)
 app.include_router(profile_routers)
 app.include_router(users_routers)
 app.include_router(server_routers)
-app.include_router(files_router)
 app.include_router(channel_routers)
 app.include_router(private_chat_routers)
 app.include_router(message_routers)
+app.include_router(files_router)
 
 
 

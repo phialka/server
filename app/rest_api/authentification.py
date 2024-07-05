@@ -7,7 +7,7 @@ from use_cases.exceptions import UncorerctLogin, UncorrectPassword
 from adapters.auth_data_repo import SQLAuthDataRepo
 from adapters.jwt_manager import FastAPIBasedJWTManager
 from .schemas.auth import Login, RefreshLogin, LoginSuccess, RefreshLoginSuccess
-from .exceptions import HTTPNotFoundError, HTTPUnprocessableEntity
+from .exception_handlers import HTTPNotFoundError, HTTPUnprocessableEntity
 
 import config
 

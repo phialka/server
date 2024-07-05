@@ -69,7 +69,7 @@ class SQLChannelMessageRepo(ChannelMessageRepo):
 
 
     async def update(self, filter: Optional[ChannelMessageFilter] = None, **kwargs) -> int:
-        pass
+        raise
 
 
     async def delete(self, filter: Optional[ChannelMessageFilter] = None) -> int:
@@ -141,14 +141,14 @@ class SQLPrivateMessageRepo(PrivateMessageRepo):
 
 
     async def update(self, filter: Optional[PrivateMessageFilter] = None, **kwargs) -> int:
-        pass
+        raise
 
 
     async def delete(self, filter: Optional[PrivateMessageFilter] = None) -> int:
         if filter:
-            private_msgs_raw = await self.__table.objects.delete(self.__serialize_filter(filter))
+            return await self.__table.objects.delete(self.__serialize_filter(filter))
         else:
-            private_msgs_raw = await self.__table.objects.delete(each=True)
+            return await self.__table.objects.delete(each=True)
 
 
 
@@ -253,8 +253,21 @@ class SQLMessageRepo(MessageRepo):
 
 
     async def update(self, filter: Optional[MessageFilter] = None, **kwargs) -> int:
-        pass
+        if 'message_id' in kwargs:
+            raise
+        if 'created_at' in kwargs:
+            raise
+        if 'author_id' in kwargs:
+            raise
+
+        if not filter:
+            return await self.__table.objects.update(each=True, **kwargs)
+        if filter:
+            return await self.__table.objects.filter(self.__serialize_filter(filter)).update(**kwargs)
 
 
     async def delete(self, filter: Optional[MessageFilter] = None) -> int:
-        pass
+        if not filter:
+            return await self.__table.objects.delete(each=True)
+        else:
+            return await self.__table.objects.filter(self.__serialize_filter(filter)).delete()

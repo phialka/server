@@ -14,7 +14,7 @@ from use_cases.private_chat_usecases import PrivateChatUseCases
 from use_cases.user_usecases import UserUseCases
 from use_cases.files_usecases import FileUseCases
 from use_cases.channel_usecases import ChannelUseCases
-from .exceptions import UserAlreadyExist, UserTagAlreadyExist, ForbiddenError
+from .exceptions import NotFoundException, AccessDeniedException
 
 
 
@@ -47,12 +47,12 @@ class MessageUseCases():
         return md5(string.encode()).hexdigest()
 
 
-    async def __get_or_create_private_chat(self, requester_id: UUID, user_id: UUID):
+    async def __get_or_create_private_chat(self, requester_id: UUID, user_id: UUID) -> PrivateChat:
         chats = await self.__chat_repo.get(filter=PrivateChatFilter(member_ids=[requester_id, user_id]))
         if len(chats) == 0:
             requester = await self.__user_uc.get_user_by_id(requester_id)
             user = await self.__user_uc.get_user_by_id(user_id)
-            chat = await self.__chat_uc.create_chat(requester, user)
+            chat = await self.__chat_uc.create_chat([requester, user])
             return chat
         return chats[0]
     
@@ -71,7 +71,7 @@ class MessageUseCases():
         msgs = await self.__chat_msg_repo.get(filter=PrivateMessageFilter(chat_id=chat_id))
 
         return len(msgs) - 1
-    
+
 
     async def __get_last_channel_sequence(self, channel_id: UUID) -> int:
         msgs = await self.__channel_msg_repo.get(filter=ChannelMessageFilter(channel_id=channel_id))
@@ -104,6 +104,9 @@ class MessageUseCases():
             msg_data: MessageCerate
             ) -> PrivateMessage:
         
+        requester = await self.__user_uc.get_user_by_id(user_id=requester_id)
+        recipient = await self.__user_uc.get_user_by_id(user_id=recipient_id)
+
         msg = await self.__create_message(msg_data=msg_data, author_id=requester_id)
 
         await self.__msg_repo.save(msg)
@@ -128,6 +131,7 @@ class MessageUseCases():
             msg_data: MessageCerate
             ) -> ChannelMessage:
         
+        requester = await self.__user_uc.get_user_by_id(user_id=requester_id)
         channel = await self.__channel_uc.get_channel_by_id(channel_id=channel_id)
 
         msg = await self.__create_message(msg_data=msg_data, author_id=requester_id)
@@ -145,7 +149,7 @@ class MessageUseCases():
         return channel_msg
 
 
-    async def get_channel_messages(self, requester_id: UUID, channel_id: UUID, sequence_min: int, count: min) -> list[ChannelMessage]:
+    async def get_channel_messages(self, requester_id: UUID, channel_id: UUID, sequence_min: int, count: Optional[int] = 50) -> list[ChannelMessage]:
         
         channel = await self.__channel_uc.get_channel_by_id(channel_id=channel_id)
 
@@ -154,8 +158,11 @@ class MessageUseCases():
         return msgs[0:count]
 
 
-    async def get_private_chat_messages(self, requester_id: UUID, chat_id: UUID, sequence_min: int, count: int) -> list[PrivateMessage]:
+    async def get_private_chat_messages(self, requester_id: UUID, chat_id: UUID, sequence_min: int, count: Optional[int] = 50) -> list[PrivateMessage]:
         chat = await self.__chat_uc.get_chat_by_id(requester_id=requester_id, chat_id=chat_id)
+
+        if requester_id not in [m.user_id for m in chat.members]:
+            raise AccessDeniedException(msg='You dont have permission to access this chat. You are not chat member')
 
         msgs = await self.__chat_msg_repo.get(filter=PrivateMessageFilter(chat_id=chat_id, sequence_min=sequence_min))
 
@@ -166,19 +173,16 @@ class MessageUseCases():
         msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
 
         if len(msgs) == 0:
-            raise
+            raise NotFoundException(msg='Message not found')
 
         return msgs[0]
 
 
     async def edit_message(self, requester_id: UUID, message_id: UUID, content: str) -> None:
-        msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
-        
-        if len(msgs) == 0:
-            raise
+        msg = await self.get_message_by_id(requester_id=requester_id, message_id=message_id)
 
-        if msgs[0].author_id != requester_id:
-            raise ForbiddenError()
+        if msg.author_id != requester_id:
+            raise AccessDeniedException(msg='You dont have permission to edit this message')
         
         await self.__msg_repo.update(filter=MessageFilter(message_id=message_id), content=content)
 
@@ -186,13 +190,10 @@ class MessageUseCases():
 
 
     async def delete_message(self, requester_id: UUID, message_id: UUID) -> None:
-        msgs = await self.__msg_repo.get(filter=MessageFilter(message_id=message_id))
-        
-        if len(msgs) == 0:
-            raise
+        msg = await self.get_message_by_id(requester_id=requester_id, message_id=message_id)
 
-        if msgs[0].author_id != requester_id:
-            raise ForbiddenError()
+        if msg.author_id != requester_id:
+            raise AccessDeniedException(msg='You dont have permission to edit this message')
         
         await self.__msg_repo.delete(filter=MessageFilter(message_id=message_id))
 

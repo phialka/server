@@ -7,7 +7,7 @@ from typing import Optional
 from entities import Server, ServerMember, User, Channel
 from .datamodels.filters import ServerFilter, ServerMemberFilter, ChannelFilter, UserFilter
 from .abstracts import ServerRepo, ServerMemberRepo, ChannelRepo
-from .exceptions import UserAlreadyExist, UserTagAlreadyExist, ForbiddenError
+from .exceptions import NotFoundException, AccessDeniedException
 
 from use_cases.files_usecases import FileUseCases
 from use_cases.user_usecases import UserUseCases
@@ -49,7 +49,7 @@ class ServerUseCases():
         servers = await self.__server_repo.get(filter=ServerFilter(server_id=server_id))
 
         if len(servers) == 0:
-            raise
+            raise NotFoundException(msg='Server not found')
         
         return servers[0]
     
@@ -58,15 +58,15 @@ class ServerUseCases():
         server_before_edit = await self.get_server_by_id(server_id)
 
         if requester_id != server_before_edit.owner_id:
-            raise ForbiddenError()
-        else:
-            fields_to_update = dict()
-            if new_title:
-                fields_to_update['title'] = new_title
-            if new_description:
-                fields_to_update['description'] = new_description
-            if len(fields_to_update) == 0:
-                raise
+            raise AccessDeniedException(msg='You dont have permission to edit this server')
+
+        fields_to_update = dict()
+        if new_title:
+            fields_to_update['title'] = new_title
+        if new_description:
+            fields_to_update['description'] = new_description
+        if len(fields_to_update) == 0:
+            raise
 
         await self.__server_repo.update(filter=ServerFilter(server_id=server_id), **fields_to_update)
         return
@@ -76,7 +76,7 @@ class ServerUseCases():
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
-            raise ForbiddenError()
+            raise AccessDeniedException(msg='You dont have permission to delete this server')
         
         await self.__server_repo.delete(filter=ServerFilter(server_id=server_id))
 
@@ -87,7 +87,7 @@ class ServerUseCases():
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
-            raise ForbiddenError()
+            raise AccessDeniedException(msg='You dont have permission to edit this server')
         
         server_logo = await self.__file_uc.upload_file(logo)
 
@@ -100,22 +100,25 @@ class ServerUseCases():
         server = await self.get_server_by_id(server_id)
 
         if requester_id != server.owner_id:
-            raise ForbiddenError()
+            raise AccessDeniedException(msg='You dont have permission to edit this server')
         
         await self.__server_repo.update(filter=ServerFilter(server_id=server_id), logo=None)
 
         return
 
 
-    async def get_server_members(self, server_id: UUID, count: Optional[int] = 100, offset: Optional[int] = 0) -> list[User]:
+    async def get_server_members(self, server_id: UUID, count: Optional[int] = 50, offset: Optional[int] = 0) -> list[User]:
         members = await self.__member_repo.get(filter=ServerMemberFilter(server_id=server_id))
-        return [m.user for m in members]
+        return [m.user for m in members][offset:offset+count]
 
 
-    async def get_channels(self, server_id: UUID) -> list[Channel]:
+    async def get_channels(self, requester_id: UUID, server_id: UUID) -> list[Channel]:
+        if requester_id not in [m.user_id for m in await self.get_server_members(server_id=server_id)]:
+            raise AccessDeniedException(msg='You dont have permission to get channels from this server. You are not server member')
+        
         channels = await self.__channel_repo.get(filter=ChannelFilter(server_id=server_id))
         return channels
-    
+
 
     async def get_user_servers(self, user_id: UUID) -> list[Server]:
         user = await self.__user_uc.get_user_by_id(user_id=user_id)
@@ -131,7 +134,7 @@ class ServerUseCases():
         return servers
 
 
-    async def search_servers_by_prompt(self, prompt: str, count: int, offset: str) -> list[Server]:
+    async def search_servers_by_prompt(self, prompt: str, count: Optional[int] = 10, offset: Optional[int] = None) -> list[Server]:
         servers = await self.__server_repo.get(filter=ServerFilter(title_search_prompt=prompt))
 
         return servers[offset:offset+count]
@@ -139,30 +142,26 @@ class ServerUseCases():
 
     async def user_join_to_server(self, requester_id: UUID, server_id: UUID) -> None:
         user = await self.__user_uc.get_user_by_id(user_id=requester_id)
+        server = await self.get_server_by_id(server_id=server_id)
 
         new_member = ServerMember(server_id=server_id, user=user)
 
-        try:
-            await self.__member_repo.save(new_member)
-        except:
-            raise
+        await self.__member_repo.save(new_member)
 
         return
     
 
     async def invite_user_to_server(self, requester_id: UUID, user_id: UUID, server_id: UUID) -> None:
         user = await self.__user_uc.get_user_by_id(user_id=user_id)
+        server = await self.get_server_by_id(server_id=server_id)
 
         server_members_like_requester = await self.__member_repo.get(filter=ServerMemberFilter(user_id=requester_id))
 
         if len(server_members_like_requester) == 0:
-            raise
+            raise AccessDeniedException(msg='You dont have permission to invite users to this server. You are not server member')
 
         new_member = ServerMember(server_id=server_id, user=user)
 
-        try:
-            await self.__member_repo.save(new_member)
-        except:
-            raise
+        await self.__member_repo.save(new_member)
 
         return

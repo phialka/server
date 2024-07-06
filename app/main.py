@@ -29,8 +29,9 @@ app.include_router(files_router)
 
 # exception handler for jwtauth
 app.add_exception_handler(AuthJWTException, authjwt_exception_handler)
-app.add_exception_handler(HTTPNotFoundError, http_not_found_exception_handler)
-app.add_exception_handler(HTTPUnprocessableEntity, http_unprocessable_entity_exception_handler)
+app.add_exception_handler(NotFoundException, not_found_exception_handler)
+app.add_exception_handler(AccessDeniedException, access_denied_exception_handler)
+app.add_exception_handler(IncorrectValueException, incorrect_value_exception_handler)
 
 
 

@@ -7,6 +7,7 @@ from mimetypes import guess_type
 from entities import File
 from .datamodels.filters import FileFilter
 from .abstracts import FileRepo, FileStorage
+from .exceptions import NotFoundException
 
 
 
@@ -37,18 +38,19 @@ class FileUseCases():
         return file
 
 
-
     async def get_file_by_id(self, file_id: UUID) -> File:
         files = await self.__repo.get(
             filter = FileFilter(file_id=file_id)
             )
 
         if len(files)<1:
-            raise FileNotFoundError()
+            raise NotFoundException(msg='File not found')
         return files[0]
 
 
-
     async def download_file_by_download_id(self, download_id: UUID) -> bytes:
-        file_bytes = await self.__storage.get(download_id)
+        try:
+            file_bytes = await self.__storage.get(download_id)
+        except FileNotFoundError:
+            raise NotFoundException(msg='File not found')
         return file_bytes

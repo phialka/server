@@ -7,7 +7,7 @@ from typing import Optional
 from entities import Channel
 from .datamodels.filters import ChannelFilter, ServerFilter
 from .abstracts import ChannelRepo, ServerRepo
-from .exceptions import UserAlreadyExist, UserTagAlreadyExist, ForbiddenError
+from .exceptions import NotFoundException, AccessDeniedException, IncorrectValueException
 
 from use_cases.files_usecases import FileUseCases
 
@@ -29,17 +29,17 @@ class ChannelUseCases():
         servers = await self.__server_repo.get(filter=ServerFilter(server_id=channel.server_id))
 
         if servers[0].owner_id != requester_id:
-            raise ForbiddenError()
+            raise AccessDeniedException(msg='You dont have permission for this action. You are not the server owner')
 
 
     async def create_channel(self, requester_id: UUID, server_id: UUID, title: str, description: Optional[str] = None) -> Channel:
         servers = await self.__server_repo.get(filter=ServerFilter(server_id=server_id))
 
         if len(servers) == 0:
-            raise
+            raise NotFoundException(msg='Server not found')
 
         if servers[0].owner_id != requester_id:
-            raise ForbiddenError()
+            raise AccessDeniedException(msg='You dont have permission for channel creation. You are not the server owner')
 
         channel = Channel(
             channel_id = uuid4(),
@@ -59,13 +59,14 @@ class ChannelUseCases():
         channels = await self.__channel_repo.get(filter=ChannelFilter(channel_id=channel_id))
 
         if len(channels) == 0:
-            raise
+            raise NotFoundException(msg='Channel not found')
         
         return channels[0]
     
 
     async def edit_channel(self, channel_id: UUID, requester_id: UUID, new_title: Optional[str] = None, new_description: Optional[str] = None) -> Channel:
         await self.__check_requester_is_owner(requester_id=requester_id, channel_id=channel_id)
+        channel = await self.get_channel_by_id(channel_id=channel_id)
 
         fields_to_update = dict()
         if new_title:
@@ -74,7 +75,7 @@ class ChannelUseCases():
             fields_to_update['description'] = new_description
 
         if len(fields_to_update) == 0:
-            raise
+            raise IncorrectValueException(msg='There are no fields to update')
 
         await self.__channel_repo.update(filter=ChannelFilter(channel_id=channel_id), **fields_to_update)
         return await self.get_channel_by_id(channel_id)
@@ -82,6 +83,7 @@ class ChannelUseCases():
 
     async def delete_channel(self, requester_id: UUID, channel_id: UUID) -> bool:
         await self.__check_requester_is_owner(requester_id=requester_id, channel_id=channel_id)
+        channel = await self.get_channel_by_id(channel_id=channel_id)
         
         await self.__channel_repo.delete(filter=ChannelFilter(channel_id=channel_id))
 
@@ -90,6 +92,7 @@ class ChannelUseCases():
 
     async def set_channel_logo(self, channel_id: UUID, requester_id: UUID, logo: BinaryIO):
         await self.__check_requester_is_owner(requester_id=requester_id, channel_id=channel_id)
+        channel = await self.get_channel_by_id(channel_id=channel_id)
         
         channel_logo = await self.__file_uc.upload_file(logo)
 
@@ -100,6 +103,7 @@ class ChannelUseCases():
 
     async def delete_channel_logo(self, channel_id: UUID, requester_id: UUID):
         await self.__check_requester_is_owner(requester_id=requester_id, channel_id=channel_id)
+        channel = await self.get_channel_by_id(channel_id=channel_id)
         
         await self.__channel_repo.update(filter=ChannelFilter(channel_id=channel_id), logo=None)
 

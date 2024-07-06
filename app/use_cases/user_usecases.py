@@ -7,7 +7,7 @@ from typing import Optional
 from entities import User, AuthData
 from .datamodels.filters import UserFilter
 from .abstracts import UserRepo, AuthDataRepo
-from .exceptions import UserNotFoundError, ForbiddenError
+from .exceptions import NotFoundException
 
 import config
 
@@ -19,14 +19,13 @@ class UserUseCases():
         self.__auth_repo: AuthDataRepo = auth_repo
 
 
-
     async def get_user_by_id(self, user_id: UUID) -> User:
         users = await self.__user_repo.get(UserFilter(user_id=user_id))
         if len(users) == 0:
-            raise UserNotFoundError
+            raise NotFoundException(msg='User not found')
         else:
             return users[0]
-        
+
 
     async def search_user_by_prompt(self, prompt: str) -> list[User]:
         if prompt.startswith(config.USER_TAG_PREFIX):

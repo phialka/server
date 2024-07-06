@@ -1,7 +1,7 @@
 from entities import AuthData
 from .datamodels.filters import AuthDataFilter
 from .abstracts import AuthDataRepo, JWTManager
-from .exceptions import UncorerctLogin, UncorrectPassword
+from .exceptions import IncorrectValueException, NotFoundException
 from hashlib import md5
 
 
@@ -20,12 +20,12 @@ class AuthUseCases():
         auth_data = await self.__repo.get(filter=AuthDataFilter(login=login))
 
         if len(auth_data) == 0:
-            raise UncorerctLogin()
+            raise NotFoundException(msg='User not found')
         else:
             auth_data = auth_data[0]
         
         if auth_data.password_hash != self.__hash(password):
-            raise UncorrectPassword()
+            raise IncorrectValueException(msg='Incorrect password')
         
         user_id = auth_data.user_id
         access_t = self.__jwt_manager.create_access_token(subject=user_id.hex, exp_time=300)

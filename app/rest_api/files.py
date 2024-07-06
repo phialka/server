@@ -7,7 +7,6 @@ from fastapi_jwt_auth import AuthJWT
 
 from entities import File
 from use_cases.files_usecases import FileUseCases
-from .exception_handlers import HTTPNotFoundError
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 
@@ -45,10 +44,7 @@ async def upload_file_to_server(file: UploadFile, auth: AuthJWT = Depends()):
         )
 async def get_file_info(file_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
-    try:
-        return await uc.get_file_by_id(file_id)
-    except FileNotFoundError:
-        raise HTTPNotFoundError("File not found")
+    return await uc.get_file_by_id(file_id)
 
 
 
@@ -65,8 +61,6 @@ async def get_file_info(file_id: UUID, auth: AuthJWT = Depends()):
         )
 async def get_file(download_id: UUID, auth: AuthJWT = Depends()):
     auth.jwt_required()
-    try:
-        file_bytes = await uc.download_file_by_download_id(download_id)
-    except FileNotFoundError:
-        raise HTTPNotFoundError("File not found")
+    file_bytes = await uc.download_file_by_download_id(download_id)
+
     return Response(content=file_bytes, status_code=200)

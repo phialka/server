@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
 from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from .security.jwt_auth import auth_scheme, get_user_id
 
 from entities import Channel, User, File
 from use_cases.files_usecases import FileUseCases
@@ -23,7 +23,7 @@ import config
 channel_routers = APIRouter(
     prefix = "/channels",
     tags = ["channels"],
-    dependencies=[Depends(HTTPBearer(scheme_name='JWT'))]
+    dependencies=[Depends(auth_scheme)]
 )
 
 
@@ -43,10 +43,7 @@ channel_uc = ChannelUseCases(channel_repo=channel_repo, server_repo=server_repo,
         "", 
         summary = 'Создать текстовый канал'
         )
-async def create_channel(data: ChannelCreate, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def create_channel(data: ChannelCreate, user_id: str = Depends(get_user_id)):
     await channel_uc.create_channel(
         requester_id = user_id,
         server_id = data.server_id,
@@ -62,10 +59,7 @@ async def create_channel(data: ChannelCreate, auth: AuthJWT = Depends()):
         "/{channel_id}", 
         summary = 'Редактировать текстовый канал'
         )
-async def edit_channel(data: ChannelUpdate, channel_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def edit_channel(data: ChannelUpdate, channel_id: UUID, user_id: str = Depends(get_user_id)):
     await channel_uc.edit_channel(
         channel_id = channel_id,
         requester_id = user_id,
@@ -81,10 +75,7 @@ async def edit_channel(data: ChannelUpdate, channel_id: UUID, auth: AuthJWT = De
         "/{channel_id}", 
         summary = 'Удалить текстовый канал'
         )
-async def delete_channel(channel_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def delete_channel(channel_id: UUID, user_id: str = Depends(get_user_id)):
     return await channel_uc.delete_channel(
         requester_id = user_id,
         channel_id = channel_id
@@ -97,9 +88,7 @@ async def delete_channel(channel_id: UUID, auth: AuthJWT = Depends()):
         summary = 'Получить информацию о текстовом канале',
         response_model = Channel
         )
-async def get_channel_info(channel_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-
+async def get_channel_info(channel_id: UUID, user_id: str = Depends(get_user_id)):
     return await channel_uc.get_channel_by_id(channel_id=channel_id)
 
 
@@ -108,10 +97,7 @@ async def get_channel_info(channel_id: UUID, auth: AuthJWT = Depends()):
         "/{channel_id}/logo", 
         summary = 'Установить логотип канала'
         )
-async def set_channel_logo(channel_id: UUID, logo: UploadFile, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def set_channel_logo(channel_id: UUID, logo: UploadFile, user_id: str = Depends(get_user_id)):
     await channel_uc.set_channel_logo(
         channel_id = channel_id,
         requester_id = user_id,
@@ -126,15 +112,9 @@ async def set_channel_logo(channel_id: UUID, logo: UploadFile, auth: AuthJWT = D
         "/{channel_id}/logo", 
         summary = 'Удалить логотип канала'
         )
-async def delete_channel_logo(channel_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def delete_channel_logo(channel_id: UUID, user_id: str = Depends(get_user_id)):
     return await channel_uc.delete_channel_logo(
         channel_id = channel_id,
         requester_id=  user_id
     )
-
-
-
 

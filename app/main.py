@@ -1,16 +1,29 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
-from rest_api import files_router, register_routers, profile_routers, auth_routers, users_routers, server_routers, channel_routers, private_chat_routers, message_routers
+from rest_api import profile_routers, auth_routers, register_routers, files_router, users_routers, server_routers, channel_routers, private_chat_routers, message_routers
+
 from rest_api.exception_handlers import *
 import config
 
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_database()
+
+    yield
+
+    await disconnect_database()
+
+
+
+app = FastAPI(lifespan=lifespan)
 app.openapi = CustomServerAPI(app).get_openapi()
 
 
@@ -27,23 +40,11 @@ app.include_router(files_router)
 
 
 
-# exception handler for jwtauth
-app.add_exception_handler(AuthJWTException, authjwt_exception_handler)
+app.add_exception_handler(AuthError, auth_error_exception_handler)
+app.add_exception_handler(NotAuth, not_auth_exception_handler)
 app.add_exception_handler(NotFoundException, not_found_exception_handler)
 app.add_exception_handler(AccessDeniedException, access_denied_exception_handler)
 app.add_exception_handler(IncorrectValueException, incorrect_value_exception_handler)
-
-
-
-@app.on_event("startup")
-async def start():
-    await connect_database()
-
-
-
-@app.on_event("shutdown")
-async def stop():
-    await disconnect_database()
 
 
 

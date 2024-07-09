@@ -16,25 +16,27 @@ except:
 #default value
 _database_url = config.DATABASE_URL
 
+_database = databases.Database(_database_url)
+_metadata = sqlalchemy.MetaData()
+
+base_ormar_config = ormar.OrmarConfig(
+    metadata = _metadata,
+    database = _database
+)
 
 
-class BaseMeta(ormar.ModelMeta):
-    metadata = sqlalchemy.MetaData()
-    database = databases.Database(_database_url)
-    
-    @classmethod
-    def change_db(cls, db_url: str) -> None:
-        """
-        Use to change database
-        Don't use it without adapter 
-        """
-        cls.database = databases.Database(db_url)
+
+def __change_db(url: str):
+    _database = databases.Database(url)
 
 
 
 class File(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "files"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     download_id: UUID = ormar.UUID()
@@ -46,8 +48,11 @@ class File(ormar.Model):
 
 
 class User(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "users"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     name: str = ormar.String(max_length=40)
@@ -59,8 +64,11 @@ class User(ormar.Model):
 
 
 class AuthData(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "auth_data"
+    )
 
     user_id: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.CASCADE)
     login: UUID = ormar.String(max_length=200, primary_key=True)
@@ -69,8 +77,11 @@ class AuthData(ormar.Model):
 
 
 class Server(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "servers"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     owner: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.CASCADE)
@@ -82,8 +93,11 @@ class Server(ormar.Model):
 
 
 class Channel(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "channels"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     server: Server = ormar.ForeignKey(Server, ondelete=ormar.ReferentialAction.CASCADE)
@@ -95,16 +109,22 @@ class Channel(ormar.Model):
 
 
 class PrivateChat(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "private_chats"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
 
 
 
 class ServerMember(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "server_members"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     server: Server = ormar.ForeignKey(Server, ondelete=ormar.ReferentialAction.CASCADE)
@@ -113,8 +133,11 @@ class ServerMember(ormar.Model):
 
 
 class PrivateChatMember(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "private_chat_members"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     private_chat: PrivateChat = ormar.ForeignKey(PrivateChat, ondelete=ormar.ReferentialAction.CASCADE)
@@ -123,8 +146,11 @@ class PrivateChatMember(ormar.Model):
 
 
 class Message(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "messages"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     author: User = ormar.ForeignKey(User, ondelete=ormar.ReferentialAction.SET_NULL, nullable=True)
@@ -135,8 +161,11 @@ class Message(ormar.Model):
 
 
 class Attachment(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "attachments"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     file: File = ormar.ForeignKey(File, ondelete=ormar.ReferentialAction.CASCADE)
@@ -146,8 +175,11 @@ class Attachment(ormar.Model):
 
 
 class ChannelMessage(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "channel_messages"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     channel: Channel = ormar.ForeignKey(Channel, ondelete=ormar.ReferentialAction.CASCADE)
@@ -158,8 +190,11 @@ class ChannelMessage(ormar.Model):
 
 
 class PrivateMessage(ormar.Model):
-    class Meta(BaseMeta):
+    ormar_config = ormar.OrmarConfig(
+        metadata = _metadata,
+        database = _database,
         tablename = "private_messages"
+    )
 
     id: UUID = ormar.UUID(primary_key=True)
     private_chat: PrivateChat = ormar.ForeignKey(PrivateChat, ondelete=ormar.ReferentialAction.CASCADE)
@@ -171,19 +206,21 @@ class PrivateMessage(ormar.Model):
 
 async def connect_database(database_url: Optional[str] = None):
     if database_url:
-        BaseMeta.change_db(database_url)
-
+        __change_db(database_url)
+    print('> eng create')
     engine = sqlalchemy.create_engine(database_url or _database_url)
-    BaseMeta.metadata.create_all(engine)
+    base_ormar_config.metadata.create_all(engine)
 
-    database_ = BaseMeta.database
+    print('> all create')
+    database_ = base_ormar_config.database
     if not database_.is_connected:
         await database_.connect()
+        print('> connected')
 
 
 
 async def disconnect_database():
-    if BaseMeta.database.is_connected:
-        await BaseMeta.database.disconnect()
+    if base_ormar_config.database.is_connected:
+        await base_ormar_config.database.disconnect()
 
 

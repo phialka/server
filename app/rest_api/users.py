@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
 from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from .security.jwt_auth import auth_scheme, get_user_id
 
 from entities import User, File
 from use_cases.user_usecases import UserUseCases
@@ -18,7 +18,7 @@ import config
 users_routers = APIRouter(
     prefix = "/users",
     tags = ["users"],
-    dependencies=[Depends(HTTPBearer(scheme_name='JWT'))]
+    dependencies=[Depends(auth_scheme)]
 )
 
 
@@ -35,8 +35,7 @@ uc = UserUseCases(user_repo, auth_repo)
         summary = 'Найти пользователя по запросу',
         response_model = list[User]
         )
-async def get_users_by_query(prompt: str, count: Optional[int] = 10, offset: Optional[int] = 0, auth: AuthJWT = Depends()):
-    auth.jwt_required()
+async def get_users_by_query(prompt: str, count: Optional[int] = 10, offset: Optional[int] = 0, user_id: str = Depends(get_user_id)):
     users = await uc.search_user_by_prompt(prompt)
     return users
 
@@ -47,8 +46,7 @@ async def get_users_by_query(prompt: str, count: Optional[int] = 10, offset: Opt
         summary = 'Получить профиль пользователя по его user_id',
         response_model = User
         )
-async def get_user_by_id(user_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
+async def get_user_by_id(user_id: UUID, requester_id: str = Depends(get_user_id)):
     user = await uc.get_user_by_id(user_id=user_id)
     return user
 

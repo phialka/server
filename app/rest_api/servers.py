@@ -3,12 +3,13 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
 from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from .security.jwt_auth import auth_scheme, get_user_id
 
 from entities import Server, File, Channel, User
 from use_cases.server_usecases import ServerUseCases
 from use_cases.files_usecases import FileUseCases
 from use_cases.user_usecases import UserUseCases
+
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 from adapters.server_repo import SQLServerRepo
@@ -27,7 +28,7 @@ import config
 server_routers = APIRouter(
     prefix = "/servers",
     tags = ["servers"],
-    dependencies=[Depends(HTTPBearer(scheme_name='JWT'))]
+    dependencies=[Depends(auth_scheme)]
 )
 
 
@@ -49,10 +50,7 @@ server_uc = ServerUseCases(server_repo, member_repo, channel_repo, user_uc, file
         "", 
         summary = 'Создать сервер'
         )
-async def create_server(data: ServerCreate, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
-
+async def create_server(data: ServerCreate, user_id: str = Depends(get_user_id)):
     await server_uc.create_server(owner_id=user_id, title=data.title, description=data.description)
 
     return
@@ -64,9 +62,7 @@ async def create_server(data: ServerCreate, auth: AuthJWT = Depends()):
         summary = 'Поиск серверов по запросу',
         response_model = list[Server]
         )
-async def search_server(prompt: str, offset: Optional[int] = 0, count: Optional[int] = 10, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-
+async def search_server(prompt: str, offset: Optional[int] = 0, count: Optional[int] = 10, user_id: str = Depends(get_user_id)):
     return await server_uc.search_servers_by_prompt(prompt=prompt, count=count, offset=offset)
 
 
@@ -75,10 +71,7 @@ async def search_server(prompt: str, offset: Optional[int] = 0, count: Optional[
         "/{server_id}", 
         summary = 'Редактировать сервер'
         )
-async def edit_server(data: ServerUpdate, server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def edit_server(data: ServerUpdate, server_id: UUID, user_id: str = Depends(get_user_id)):
     await server_uc.edit_server(
         server_id=server_id, 
         requester_id=user_id, 
@@ -94,10 +87,7 @@ async def edit_server(data: ServerUpdate, server_id: UUID, auth: AuthJWT = Depen
         "/{server_id}", 
         summary = 'Удалить сервер'
         )
-async def delete_server(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def delete_server(server_id: UUID, user_id: str = Depends(get_user_id)):
     return await server_uc.delete_server(requester_id=user_id, server_id=server_id)
 
 
@@ -107,9 +97,7 @@ async def delete_server(server_id: UUID, auth: AuthJWT = Depends()):
         summary = 'Получить информацию о сервере',
         response_model = Server
         )
-async def get_server_info(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-
+async def get_server_info(server_id: UUID, user_id: str = Depends(get_user_id)):
     return await server_uc.get_server_by_id(server_id=server_id)
 
 
@@ -119,10 +107,7 @@ async def get_server_info(server_id: UUID, auth: AuthJWT = Depends()):
         summary = 'Установить логотип сервера',
         response_model = File
         )
-async def set_server_logo(server_id: UUID, logo: UploadFile, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def set_server_logo(server_id: UUID, logo: UploadFile, user_id: str = Depends(get_user_id)):
     await server_uc.set_server_logo(server_id, requester_id=user_id, logo=logo.file)
 
     return
@@ -133,10 +118,7 @@ async def set_server_logo(server_id: UUID, logo: UploadFile, auth: AuthJWT = Dep
         "/{server_id}/logo", 
         summary = 'Удалить логотип сервера'
         )
-async def delete_server_logo(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def delete_server_logo(server_id: UUID, user_id: str = Depends(get_user_id)):
     return await server_uc.delete_server_logo(server_id=server_id, requester_id=user_id)
 
 
@@ -146,9 +128,7 @@ async def delete_server_logo(server_id: UUID, auth: AuthJWT = Depends()):
         summary = 'Получить список текстовых каналов на сервере',
         response_model = list[Channel]
         )
-async def get_server_channels(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-
+async def get_server_channels(server_id: UUID, user_id: str = Depends(get_user_id)):
     return await server_uc.get_channels(server_id)
 
 
@@ -158,9 +138,7 @@ async def get_server_channels(server_id: UUID, auth: AuthJWT = Depends()):
         summary = 'Получить список пользователей сервера',
         response_model = list[User]
         )
-async def get_server_members(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-
+async def get_server_members(server_id: UUID, user_id: str = Depends(get_user_id)):
     return await server_uc.get_server_members(server_id)
 
 
@@ -169,10 +147,7 @@ async def get_server_members(server_id: UUID, auth: AuthJWT = Depends()):
         "/{server_id}/join", 
         summary = 'Присоединиться к серверу'
         )
-async def join_to_channel(server_id: UUID, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def join_to_channel(server_id: UUID, user_id: str = Depends(get_user_id)):
     await server_uc.user_join_to_server(requester_id=user_id, server_id=server_id)
     return
 
@@ -182,9 +157,6 @@ async def join_to_channel(server_id: UUID, auth: AuthJWT = Depends()):
         "/{server_id}/invite", 
         summary = 'Пригласить пользователя на сервер'
         )
-async def invite_user_to_channel(server_id: UUID, user: UserInvite, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = UUID(auth.get_jwt_subject())
-
+async def invite_user_to_channel(server_id: UUID, user: UserInvite, user_id: str = Depends(get_user_id)):
     await server_uc.invite_user_to_server(requester_id=user_id, user_id=user.user_id, server_id=server_id)
     return

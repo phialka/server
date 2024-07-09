@@ -4,7 +4,7 @@ from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
 
 from use_cases.authentification_usecases import AuthUseCases
 from adapters.auth_data_repo import SQLAuthDataRepo
-from adapters.jwt_manager import FastAPIBasedJWTManager
+from adapters.jwt_manager import JWTManager
 from .schemas.auth import Login, RefreshLogin, LoginSuccess, RefreshLoginSuccess
 
 import config
@@ -17,7 +17,7 @@ auth_routers = APIRouter(
 
 
 
-uc = AuthUseCases(repo=SQLAuthDataRepo(), jwt_manager=FastAPIBasedJWTManager('super_secret'))
+uc = AuthUseCases(repo=SQLAuthDataRepo(), jwt_manager=JWTManager(config.JWT_SECRET_KEY))
 
 
 

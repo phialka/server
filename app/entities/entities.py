@@ -1,5 +1,5 @@
 from typing import Union, Optional
-from pydantic import BaseModel, ByteSize
+from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime, date
 
@@ -11,7 +11,7 @@ class File(BaseModel):
     '''
     file_id: UUID
     download_id: UUID
-    size: ByteSize
+    size: int
     hash: str
     mime_type: str
     upload_at: datetime

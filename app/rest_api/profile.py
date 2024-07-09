@@ -1,18 +1,19 @@
 from uuid import UUID
+from typing import Annotated
 
 from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
-from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from .security.jwt_auth import auth_scheme, get_user_id
+from .schemas.profile import UserCreate, UserUpdate
 
 from entities import User, File
 from use_cases.profile_usecases import ProfileUseCases
 from use_cases.files_usecases import FileUseCases
 from use_cases.user_usecases import UserUseCases
+
 from adapters.file_repo import SQLFileRepo
 from adapters.file_storage import SystemFileStorage
 from adapters.auth_data_repo import SQLAuthDataRepo
 from adapters.user_repo import SQLUserRepo
-from .schemas.profile import UserCreate, UserUpdate
 
 import config
 
@@ -21,14 +22,17 @@ import config
 profile_routers = APIRouter(
     prefix = "/profile",
     tags = ["profile"],
-    dependencies=[Depends(HTTPBearer(scheme_name='JWT'))]
+    dependencies=[Depends(auth_scheme)]
 )
+
 
 
 register_routers = APIRouter(
     prefix = "/profile",
     tags = ["profile"]
 )
+
+
 
 file_repo = SQLFileRepo()
 file_storage = SystemFileStorage(config.FILE_STORAGE)
@@ -55,10 +59,7 @@ async def register(user: UserCreate):
         "", 
         summary = 'Удалить профиль'
         )
-async def delete_profile(auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
-
+async def delete_profile(user_id: str = Depends(get_user_id)):
     await uc.delete_profile(user_id=user_id, requester_id=user_id)
 
     return
@@ -70,9 +71,7 @@ async def delete_profile(auth: AuthJWT = Depends()):
         summary = 'Получить данные своего профиля',
         response_model = User
         )
-async def get_profile(auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
+async def get_profile(user_id: str = Depends(get_user_id)):
     return await user_uc.get_user_by_id(user_id)
     
 
@@ -81,9 +80,7 @@ async def get_profile(auth: AuthJWT = Depends()):
         "", 
         summary = 'Редактировать свой профиль'
         )
-async def edit_profile(data: UserUpdate, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
+async def edit_profile(data: UserUpdate, user_id: str = Depends(get_user_id)):
     await uc.update_profile(
         user_id = user_id,
         requester_id = user_id,
@@ -101,9 +98,7 @@ async def edit_profile(data: UserUpdate, auth: AuthJWT = Depends()):
         "/photo", 
         summary = 'Установить фото профиля'
         )
-async def set_profile_photo(photo: UploadFile, auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
+async def set_profile_photo(photo: UploadFile, user_id: str = Depends(get_user_id)):
     
     await uc.set_profile_photo(photo=photo.file, user_id=user_id, requester_id=user_id)
     
@@ -115,10 +110,7 @@ async def set_profile_photo(photo: UploadFile, auth: AuthJWT = Depends()):
         "/photo", 
         summary = 'Удалить фото профиля'
         )
-async def delete_profile_photo(auth: AuthJWT = Depends()):
-    auth.jwt_required()
-    user_id = auth.get_jwt_subject()
-
+async def delete_profile_photo(user_id: str = Depends(get_user_id)):
     await uc.delete_profile_photo(user_id=user_id, requester_id=user_id)
 
     return

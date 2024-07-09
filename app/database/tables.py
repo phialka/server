@@ -207,8 +207,8 @@ class PrivateMessage(ormar.Model):
 async def connect_database(database_url: Optional[str] = None):
     if database_url:
         __change_db(database_url)
-    print('> eng create')
     engine = sqlalchemy.create_engine(database_url or _database_url)
+    print('> engine create')
     base_ormar_config.metadata.create_all(engine)
 
     print('> all create')

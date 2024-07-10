@@ -1,0 +1,35 @@
+services:
+  app:
+    build: 
+      dockerfile: ./app.dockerfile
+    depends_on:
+      - database
+    env_file: ./.env
+    volumes:
+      - type: volume
+        source: files
+        target: /app/resources/domain_files
+    networks:
+      - database
+    ports:
+      - 80:80
+  database:
+    image: postgres:15
+    env_file: ./.env
+    volumes:
+      - type: volume
+        source: db
+        target: /var/lib/postgresql/data
+    networks:
+      - database
+
+networks:
+  database:
+    driver: bridge
+
+volumes:
+  db:
+    name: phialka_database_volume
+  files:
+    name: phialka_file_storage_volume
+

@@ -8,6 +8,9 @@ from pydantic import BaseModel
 
 
 class AuthDataRepo(ABC):
+    """
+    Abstract repo for user auth data
+    """
 
     @abstractmethod
     async def save(self, data: AuthData) -> bool:

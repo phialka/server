@@ -1,6 +1,13 @@
+import os
 from dotenv import dotenv_values
 
-__values = dotenv_values(".env")
+if os.path.exists('.env'):
+    __values = dotenv_values(".env")
+else:
+    __values = os.environ
+    print(__values)
+
+
 SERVER_NAME = __values["SERVER_NAME"]
 DATABASE_URL = __values["DATABASE_URL"]
 JSON_DB_PATH = __values["JSON_DB_PATH"]

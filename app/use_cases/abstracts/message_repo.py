@@ -8,6 +8,9 @@ from datetime import date
 
 
 class ChannelMessageRepo(ABC):
+    """
+    Abstract repo for channel message objects
+    """
 
     @abstractmethod
     async def save(self, message: ChannelMessage) -> bool:
@@ -28,6 +31,9 @@ class ChannelMessageRepo(ABC):
 
 
 class PrivateMessageRepo(ABC):
+    """
+    Abstract repo for private message objects
+    """
 
     @abstractmethod
     async def save(self, message: PrivateMessage) -> bool:
@@ -48,6 +54,9 @@ class PrivateMessageRepo(ABC):
 
 
 class MessageRepo(ABC):
+    """
+    Abstract repo for message objects
+    """
 
     @abstractmethod
     async def save(self, message: Message) -> bool:

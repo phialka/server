@@ -8,6 +8,9 @@ from datetime import date
 
 
 class UserRepo(ABC):
+    """
+    Abstract repo for user objects
+    """
 
     @abstractmethod
     async def save(self, user: User) -> bool:

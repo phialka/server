@@ -8,6 +8,9 @@ from datetime import date
 
 
 class ChannelRepo(ABC):
+    """
+    Abstract repo for channel objects
+    """
 
     @abstractmethod
     async def save(self, channel: Channel) -> bool:

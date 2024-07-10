@@ -5,6 +5,9 @@ from typing import BinaryIO
 
 
 class FileStorage(ABC):
+    """
+    Abstract file storage
+    """
 
     @abstractmethod
     async def save(self, bin_file: BinaryIO, save_as: str) -> UUID:

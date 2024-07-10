@@ -7,6 +7,9 @@ from typing import Optional
 
 
 class PrivateChatRepo(ABC):
+    """
+    Abstract repo for private chat objects
+    """
 
     @abstractmethod
     async def save(self, chat: PrivateChat) -> bool:

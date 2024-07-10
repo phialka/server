@@ -46,11 +46,17 @@ class NotFoundException(UseCaseException):
 
 
 class NotAuth(UseCaseException):
+    '''
+    Raises if user isnt authenticated
+    '''
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
 
 class AuthError(UseCaseException):
+    '''
+    Raises if authentification failed
+    '''
     def __init__(self, msg: str) -> None:
         super().__init__(msg)

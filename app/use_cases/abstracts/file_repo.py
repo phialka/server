@@ -5,6 +5,9 @@ from ..datamodels.filters import FileFilter
 
 
 class FileRepo(ABC):
+    """
+    Abstract repo for file objects
+    """
 
     @abstractmethod
     async def save(self, file: File) -> bool:

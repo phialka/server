@@ -32,6 +32,9 @@ def __change_db(url: str):
 
 
 class File(ormar.Model):
+    """
+    Database model for file object
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -48,6 +51,9 @@ class File(ormar.Model):
 
 
 class User(ormar.Model):
+    """
+    Database model for user
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -64,6 +70,9 @@ class User(ormar.Model):
 
 
 class AuthData(ormar.Model):
+    """
+    Database model for user auth data
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -77,6 +86,9 @@ class AuthData(ormar.Model):
 
 
 class Server(ormar.Model):
+    """
+    Database model for sever
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -93,6 +105,9 @@ class Server(ormar.Model):
 
 
 class Channel(ormar.Model):
+    """
+    Database model for text channel
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -109,6 +124,9 @@ class Channel(ormar.Model):
 
 
 class PrivateChat(ormar.Model):
+    """
+    Database model for private chat
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -120,6 +138,9 @@ class PrivateChat(ormar.Model):
 
 
 class ServerMember(ormar.Model):
+    """
+    Database model for server member
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -133,6 +154,9 @@ class ServerMember(ormar.Model):
 
 
 class PrivateChatMember(ormar.Model):
+    """
+    Database model for private chat member
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -146,6 +170,9 @@ class PrivateChatMember(ormar.Model):
 
 
 class Message(ormar.Model):
+    """
+    Database model for message
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -161,6 +188,9 @@ class Message(ormar.Model):
 
 
 class Attachment(ormar.Model):
+    """
+    Database model for message attachment
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -175,6 +205,9 @@ class Attachment(ormar.Model):
 
 
 class ChannelMessage(ormar.Model):
+    """
+    Database model for tex channel message
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -190,6 +223,9 @@ class ChannelMessage(ormar.Model):
 
 
 class PrivateMessage(ormar.Model):
+    """
+    Database model for private chat message
+    """
     ormar_config = ormar.OrmarConfig(
         metadata = _metadata,
         database = _database,
@@ -205,6 +241,12 @@ class PrivateMessage(ormar.Model):
 
 
 async def connect_database(database_url: Optional[str] = None):
+    """
+    Method for connecting to database
+
+    Accepts database url in format:\n
+    connector://user:password@host:port/database_name
+    """
     if database_url:
         __change_db(database_url)
     engine = sqlalchemy.create_engine(database_url or _database_url)
@@ -220,6 +262,9 @@ async def connect_database(database_url: Optional[str] = None):
 
 
 async def disconnect_database():
+    """
+    Method for disconnecting from database
+    """
     if base_ormar_config.database.is_connected:
         await base_ormar_config.database.disconnect()
 

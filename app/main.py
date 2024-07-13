@@ -45,6 +45,7 @@ app.add_exception_handler(NotAuth, not_auth_exception_handler)
 app.add_exception_handler(NotFoundException, not_found_exception_handler)
 app.add_exception_handler(AccessDeniedException, access_denied_exception_handler)
 app.add_exception_handler(IncorrectValueException, incorrect_value_exception_handler)
+app.add_exception_handler(AlreadyExistsException, already_exists_exception_handler)
 
 
 

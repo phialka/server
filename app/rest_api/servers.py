@@ -58,6 +58,16 @@ async def create_server(data: ServerCreate, user_id: str = Depends(get_user_id))
 
 
 @server_routers.get(
+        "", 
+        summary = 'Получить список серверов, в которых состоит текущий пользователь',
+        response_model = list[Server]
+        )
+async def get_my_servers(user_id: str = Depends(get_user_id)):
+    return await server_uc.get_user_servers(user_id=user_id)
+
+
+
+@server_routers.get(
         "/search", 
         summary = 'Поиск серверов по запросу',
         response_model = list[Server]

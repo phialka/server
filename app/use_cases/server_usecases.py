@@ -129,7 +129,7 @@ class ServerUseCases():
 
         servers = []
         for server_id in server_ids:
-            servers.append(await self.__server_repo.get(filter=ServerFilter(server_id=server_id)))
+            servers.append(await self.get_server_by_id(server_id=server_id))
 
         return servers
 

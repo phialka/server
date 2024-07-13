@@ -1,5 +1,6 @@
 import os
 from dotenv import dotenv_values
+import json
 
 if os.path.exists('.env'):
     __values = dotenv_values(".env")
@@ -18,3 +19,4 @@ PORT=int(__values["PORT"])
 USER_TAG_PREFIX=__values["USER_TAG_PREFIX"]
 JWT_ACCESS_TTL=int(__values["JWT_ACCESS_TTL"])
 JWT_REFRESH_TTL=int(__values["JWT_REFRESH_TTL"])
+ALLOW_ORIGINS=json.loads(__values["ALLOW_ORIGINS"])

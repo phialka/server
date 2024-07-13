@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
@@ -25,6 +26,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.openapi = CustomServerAPI(app).get_openapi()
+
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 
 

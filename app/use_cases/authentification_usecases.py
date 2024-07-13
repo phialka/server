@@ -43,3 +43,7 @@ class AuthUseCases():
         return access_t, refresh_t
 
 
+
+    async def get_user_id_from_jwt(self, kek):
+        pass
+

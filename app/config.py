@@ -16,3 +16,5 @@ FILE_STORAGE=__values["FILE_STORAGE"]
 HOST=__values["HOST"]
 PORT=int(__values["PORT"])
 USER_TAG_PREFIX=__values["USER_TAG_PREFIX"]
+JWT_ACCESS_TTL=int(__values["JWT_ACCESS_TTL"])
+JWT_REFRESH_TTL=int(__values["JWT_REFRESH_TTL"])

@@ -17,7 +17,7 @@ auth_routers = APIRouter(
 
 
 
-uc = AuthUseCases(repo=SQLAuthDataRepo(), jwt_manager=JWTManager(config.JWT_SECRET_KEY))
+uc = AuthUseCases(repo=SQLAuthDataRepo(), jwt_manager=JWTManager(key = config.JWT_SECRET_KEY, access_ttl=config.JWT_ACCESS_TTL, refersh_ttl=config.JWT_REFRESH_TTL))
 
 
 

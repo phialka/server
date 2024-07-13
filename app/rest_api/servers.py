@@ -139,7 +139,7 @@ async def delete_server_logo(server_id: UUID, user_id: str = Depends(get_user_id
         response_model = list[Channel]
         )
 async def get_server_channels(server_id: UUID, user_id: str = Depends(get_user_id)):
-    return await server_uc.get_channels(server_id)
+    return await server_uc.get_channels(requester_id=user_id, server_id=server_id)
 
 
 

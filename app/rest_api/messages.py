@@ -64,7 +64,9 @@ async def get_message_by_id(message_id: UUID, user_id: str = Depends(get_user_id
         summary = 'Удалить сообщение по ID'
         )
 async def delete_message_by_id(message_id: UUID, user_id: str = Depends(get_user_id)):
-    pass
+    await message_uc.delete_message(requester_id=user_id, message_id=message_id)
+
+    return
 
 
 

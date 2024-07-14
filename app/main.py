@@ -9,7 +9,8 @@ from utils.openapi_documentation import CustomServerAPI
 from database.tables import connect_database, disconnect_database
 from rest_api import profile_routers, auth_routers, register_routers, files_router, users_routers, server_routers, channel_routers, private_chat_routers, message_routers
 
-from rest_api.exception_handlers import *
+from rest_api.exception_handlers import AuthError, NotAuth, NotFoundException, AccessDeniedException, IncorrectValueException, AlreadyExistsException, \
+access_denied_exception_handler, already_exists_exception_handler, auth_error_exception_handler, not_auth_exception_handler, not_found_exception_handler, incorrect_value_exception_handler
 import config
 
 

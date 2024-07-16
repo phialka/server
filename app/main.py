@@ -5,12 +5,20 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from utils.openapi_documentation import CustomServerAPI
-from database.tables import connect_database, disconnect_database
-from rest_api import profile_routers, auth_routers, register_routers, files_router, users_routers, server_routers, channel_routers, private_chat_routers, message_routers
+from auth.routers import auth_routers
+from users.routers import users_routers, profile_routers, register_routers
+from private_chats.routers import private_chat_routers
+from servers.routers import server_routers
+from channels.routers import channel_routers
+from messages.routers import message_routers
+from files.routers import files_router
 
-from rest_api.exception_handlers import AuthError, NotAuth, NotFoundException, AccessDeniedException, IncorrectValueException, AlreadyExistsException, \
-access_denied_exception_handler, already_exists_exception_handler, auth_error_exception_handler, not_auth_exception_handler, not_found_exception_handler, incorrect_value_exception_handler
+from utils.openapi_documentation import CustomServerAPI
+from utils.fastapi_exceptions_handler import set_exception_handlers
+from database import connect_database, disconnect_database
+
+from exceptions import *
+
 import config
 
 
@@ -44,20 +52,15 @@ app.include_router(auth_routers)
 app.include_router(register_routers)
 app.include_router(profile_routers)
 app.include_router(users_routers)
+app.include_router(private_chat_routers)
 app.include_router(server_routers)
 app.include_router(channel_routers)
-app.include_router(private_chat_routers)
 app.include_router(message_routers)
 app.include_router(files_router)
 
 
 
-app.add_exception_handler(AuthError, auth_error_exception_handler)
-app.add_exception_handler(NotAuth, not_auth_exception_handler)
-app.add_exception_handler(NotFoundException, not_found_exception_handler)
-app.add_exception_handler(AccessDeniedException, access_denied_exception_handler)
-app.add_exception_handler(IncorrectValueException, incorrect_value_exception_handler)
-app.add_exception_handler(AlreadyExistsException, already_exists_exception_handler)
+set_exception_handlers(app=app)
 
 
 

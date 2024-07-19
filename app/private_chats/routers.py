@@ -11,6 +11,7 @@ from private_chats.adapters import SQLPrivateChatRepo, SQLPrivateMessageRepo
 
 from messages.schemas import MessageCerate
 from messages.adapters import SQLMessageRepo
+from messages.routers import message_uc
 
 from auth.adapters import SQLAuthDataRepo
 
@@ -36,11 +37,11 @@ chat_uc = PrivateChatUseCases(
         private_msg_repo=SQLPrivateMessageRepo(),
         user_repo=SQLUserRepo(),
         auth_repo=SQLAuthDataRepo(),
-        msg_repo=SQLMessageRepo(),
         file_repo=SQLFileRepo(),
         file_storage=SystemFileStorage(
             path=config.FILE_STORAGE
-        )
+        ),
+        message_uc=message_uc
     )
 
 

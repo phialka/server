@@ -6,7 +6,6 @@ if os.path.exists('.env'):
     __values = dotenv_values(".env")
 else:
     __values = os.environ
-    print(__values)
 
 
 SERVER_NAME = __values["SERVER_NAME"]

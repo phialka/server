@@ -20,7 +20,7 @@ from servers.use_cases import ServerUseCases
 from messages.use_cases import MessageUseCases
 from users.use_caces import UserUseCases
 
-from exceptions import NotFoundException, AccessDeniedException, IncorrectValueException
+from exceptions import NotFoundException, AccessDeniedException, IncorrectValueException, ReceiverClosed
 
 
 
@@ -35,7 +35,7 @@ class ChannelUseCases():
             user_repo: UserRepo,
             auth_repo: AuthDataRepo,
             channel_msg_repo: ChannelMessageRepo,
-            msg_repo: MessageRepo
+            messages_uc: MessageUseCases
             ) -> None:
         self.__channel_repo: ChannelRepo = channel_repo
         self.__channel_msg_repo: ChannelMessageRepo = channel_msg_repo
@@ -47,13 +47,7 @@ class ChannelUseCases():
             file_repo=file_repo,
             file_storage=file_storage
             )
-        self.__msg_uc: MessageUseCases = MessageUseCases(
-            msg_repo=msg_repo,
-            user_repo=user_repo,
-            auth_repo=auth_repo,
-            file_repo=file_repo,
-            file_storage=file_storage
-        )
+        self.__msg_uc: MessageUseCases = messages_uc
         self.__server_uc = ServerUseCases(
             server_repo=server_repo,
             member_repo=member_repo,
@@ -185,6 +179,15 @@ class ChannelUseCases():
 
         await self.__channel_msg_repo.save(channel_msg)
 
+        member_ids = [m.user_id for m in await self.__server_uc.get_server_members(server_id=channel.server_id, count=100000)]
+        
+        for rec in self.__msg_uc.user_msg_reseivers:
+            if rec.user_id in member_ids:
+                try:
+                    await rec.send_message(msg=channel_msg)
+                except ReceiverClosed:
+                    self.__msg_uc.delete_user_msg_receiver(user_id=rec.user_id)
+                
         return channel_msg
 
 

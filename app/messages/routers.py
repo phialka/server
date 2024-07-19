@@ -1,14 +1,14 @@
 from uuid import UUID
 from typing import Optional
 
-from fastapi import APIRouter, UploadFile, Response, status, Depends, Request
+from fastapi import APIRouter, UploadFile, Response, status, Depends, Request, WebSocket
 from utils.fastapi_jwt_auth import auth_scheme, get_user_id
 
 from messages.schemas import Message, MessageUpdate
 from messages.use_cases import MessageUseCases
 from messages.adapters import SQLMessageRepo
 
-from users.adapters import SQLUserRepo
+from users.adapters import SQLUserRepo, UserMsgWebSocket
 
 from auth.adapters import SQLAuthDataRepo
 
@@ -28,13 +28,21 @@ message_routers = APIRouter(
 
 message_uc = MessageUseCases(
         msg_repo=SQLMessageRepo(),
-        user_repo=SQLUserRepo(),
-        auth_repo=SQLAuthDataRepo(),
         file_repo=SQLFileRepo(),
         file_storage=SystemFileStorage(
             path=config.FILE_STORAGE
         )
     )
+
+
+
+@message_routers.websocket(
+        "/messages/ws"
+        )
+async def get_message_ws(ws: WebSocket, user_id: str = Depends(get_user_id)):
+    await ws.accept()
+    rec = UserMsgWebSocket(user_id=user_id, ws=ws)
+    return await message_uc.add_user_msg_receiver(rec)
 
 
 

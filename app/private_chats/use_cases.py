@@ -13,7 +13,7 @@ from users.abstracts import UserRepo
 from auth.abstracts import AuthDataRepo
 from messages.abstracts import MessageRepo
 from files.abstracts import FileRepo, FileStorage
-from exceptions import NotFoundException, AccessDeniedException
+from exceptions import NotFoundException, AccessDeniedException, ReceiverClosed
 
 from users.use_caces import UserUseCases
 from messages.use_cases import MessageUseCases
@@ -27,9 +27,9 @@ class PrivateChatUseCases():
             private_msg_repo: PrivateMessageRepo,
             user_repo: UserRepo,
             auth_repo: AuthDataRepo,
-            msg_repo: MessageRepo,
             file_repo: FileRepo,
-            file_storage: FileStorage
+            file_storage: FileStorage,
+            message_uc: MessageUseCases
             ) -> None:
         self.__chat_repo: PrivateChatRepo = chat_repo
         self.__chat_msg_repo: PrivateMessageRepo = private_msg_repo
@@ -39,13 +39,7 @@ class PrivateChatUseCases():
             file_repo=file_repo,
             file_storage=file_storage
             )
-        self.__msg_uc: MessageUseCases = MessageUseCases(
-            msg_repo=msg_repo,
-            user_repo=user_repo,
-            auth_repo=auth_repo,
-            file_repo=file_repo,
-            file_storage=file_storage
-            )
+        self.__msg_uc: MessageUseCases = message_uc
 
     
     def __hash(self, string: str) -> str:
@@ -131,6 +125,14 @@ class PrivateChatUseCases():
         )
 
         await self.__chat_msg_repo.save(private_msg)
+
+        recs = self.__msg_uc.user_msg_reseivers
+        for r in recs:
+            if r.user_id == recipient_id:
+                try:
+                    await r.send_message(msg=private_msg)
+                except ReceiverClosed:
+                    self.__msg_uc.delete_user_msg_receiver(user_id=r.user_id)
 
         return private_msg
 

@@ -9,7 +9,7 @@ from messages.schemas import Message, Attachment, MessageCerate, AttachmentCreat
 from messages.abstracts import MessageRepo, MessageFilter
 from files.abstracts import FileRepo, FileStorage
 from auth.abstracts import AuthDataRepo
-from users.abstracts import UserRepo
+from users.abstracts import UserRepo, UserMsgReceiver
 
 from users.use_caces import UserUseCases
 from files.use_cases import FileUseCases
@@ -22,13 +22,13 @@ class MessageUseCases():
     def __init__(
             self, 
             msg_repo: MessageRepo, 
-            user_repo: UserRepo,
-            auth_repo: AuthDataRepo,
             file_repo: FileRepo,
             file_storage: FileStorage
             ) -> None:
         self.__msg_repo: MessageRepo = msg_repo
         self.__file_uc: FileUseCases = FileUseCases(file_repo=file_repo, file_storage=file_storage)
+
+        self.__user_msg_receivers: list[UserMsgReceiver] = []
 
 
     def __hash(self, string: str) -> str:
@@ -43,6 +43,19 @@ class MessageUseCases():
         )
 
         return attach
+    
+
+    @property
+    def user_msg_reseivers(self):
+        return self.__user_msg_receivers
+
+
+    def add_user_msg_receiver(self, rec: UserMsgReceiver):
+        self.__user_msg_receivers.append(rec)
+
+
+    def delete_user_msg_receiver(self, user_id: UUID):
+        self.__user_msg_receivers = [rec for rec in self.__user_msg_receivers if rec.user_id != user_id]
 
 
     async def create_message(self, msg_data: MessageCerate, author_id: UUID) -> Message:

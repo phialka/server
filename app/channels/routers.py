@@ -14,6 +14,7 @@ from auth.adapters import SQLAuthDataRepo
 
 from messages.schemas import MessageCerate
 from messages.adapters import SQLMessageRepo
+from messages.routers import message_uc
 
 from servers.adapters import SQLServerRepo, SQLServerMemberRepo
 from servers.routers import server_routers
@@ -41,7 +42,7 @@ channel_uc = ChannelUseCases(
         member_repo=SQLServerMemberRepo(),
         user_repo=SQLUserRepo(),
         auth_repo=SQLAuthDataRepo(),
-        msg_repo=SQLMessageRepo()
+        messages_uc=message_uc
     )
 
 

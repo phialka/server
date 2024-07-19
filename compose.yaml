@@ -8,7 +8,7 @@ services:
     volumes:
       - type: volume
         source: files
-        target: /app/resources/domain_files
+        target: /domain_files
     networks:
       - database
     ports:
@@ -19,7 +19,7 @@ services:
     volumes:
       - type: volume
         source: db
-        target: /var/lib/postgresql/data
+        target: /db_data
     networks:
       - database
 

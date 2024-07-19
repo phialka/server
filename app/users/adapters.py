@@ -1,10 +1,17 @@
 from typing import Optional
+from uuid import UUID
 
+from fastapi import WebSocket, WebSocketDisconnect
+
+from channels.schemas import ChannelMessage
+from private_chats.schemas import PrivateMessage
 from users.schemas import User
-from users.abstracts import UserRepo, UserFilter
+from users.abstracts import UserRepo, UserFilter, UserMsgReceiver
 from users.dbmodels import User as DBUser
 
 from files.schemas import File
+
+from exceptions import ReceiverClosed
 
 
 
@@ -96,3 +103,18 @@ class SQLUserRepo(UserRepo):
             return await self.__table.objects.filter(self.__serialize_filter(filter)).delete()
         else:
             return await self.__table.objects.delete(each=True)
+
+
+
+class UserMsgWebSocket(UserMsgReceiver):
+
+    def __init__(self, user_id: UUID, ws: WebSocket) -> None:
+        self.user_id: UUID = user_id
+        self.ws: WebSocket = ws
+
+    
+    async def send_message(self, msg: ChannelMessage | PrivateMessage) -> None:
+        try:
+            await self.ws.send_json(data=msg)
+        except WebSocketDisconnect:
+            raise ReceiverClosed

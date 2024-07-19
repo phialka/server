@@ -60,3 +60,12 @@ class AuthError(UseCaseException):
     '''
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
+
+
+
+class ReceiverClosed(UseCaseException):
+    '''
+    Raises if user message receiver is closed
+    '''
+    def __init__(self, msg: str) -> None:
+        super().__init__(msg)

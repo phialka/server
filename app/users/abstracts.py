@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 from pydantic import BaseModel
 
 from .schemas import User
+from channels.schemas import ChannelMessage
+from private_chats.schemas import PrivateMessage
 
 
 
@@ -35,4 +37,16 @@ class UserRepo(ABC):
 
     @abstractmethod
     async def delete(self, filter: Optional[UserFilter] = None) -> int:
+        pass
+
+
+
+class UserMsgReceiver(ABC):
+    """
+    Abstract class for sending messages to user in real time
+    """
+
+    user_id: UUID
+
+    async def send_message(self, msg: Union[ChannelMessage, PrivateMessage]) -> None:
         pass

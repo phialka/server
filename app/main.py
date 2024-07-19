@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth.routers import auth_routers
@@ -15,6 +14,7 @@ from files.routers import files_router
 
 from utils.openapi_documentation import CustomServerAPI
 from utils.fastapi_exceptions_handler import set_exception_handlers
+from utils.file_storage import Storage
 from database import connect_database, disconnect_database
 
 from exceptions import *
@@ -26,6 +26,7 @@ import config
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_database()
+    await Storage.create_storage(config.FILE_STORAGE)
 
     yield
 
@@ -71,4 +72,9 @@ async def mainpage():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True, host=config.HOST, port=config.PORT)
+    uvicorn.run(
+        "main:app", 
+        reload=True, 
+        host=config.HOST, 
+        port=config.PORT
+        )

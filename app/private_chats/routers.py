@@ -52,7 +52,7 @@ chat_uc = PrivateChatUseCases(
         response_model = list[PrivateChat]
         )
 async def get_my_chats(user_id: str = Depends(get_user_id)):
-    chats = await chat_uc.get_chats_by_member(user_id=user_id)
+    chats = await chat_uc.get_chats_by_member(user_id=user_id, requester_id=user_id)
 
     return chats
 
@@ -94,7 +94,7 @@ async def send_message_to_user(user_id: UUID, msg: MessageCerate, requester_id: 
 
 
 @private_chat_routers.get(
-        "/private/{chat_id}/messages", 
+        "/{chat_id}/messages", 
         summary = 'Получить сообщения из приватного чата',
         response_model = list[PrivateMessage],
         tags=['messages']

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from auth.schemas import AuthDataBasic, AuthDataRefresh, TokenSet
 from auth.use_caces import AuthUseCases
@@ -33,8 +33,22 @@ auth_uc = AuthUseCases(
         summary = 'Получить JWT токен по логину и паролю',
         response_model = TokenSet
         )
-async def login(data: AuthDataBasic):
+async def login(data: AuthDataBasic, res: Response):
     access, refresh = await auth_uc.get_jwt_by_logpass(data.username, data.userpass)
+    res.set_cookie(
+        key='access_token',
+        value=access,
+        secure=False,
+        httponly=True,
+        path='/'
+    )
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh,
+        secure=False,
+        httponly=True,
+        path='/auth/refresh'
+    )
 
     return TokenSet(token=access, refresh=refresh)
 
@@ -45,6 +59,20 @@ async def login(data: AuthDataBasic):
         summary = 'Получить JWT токен по refresh-токену',
         response_model = TokenSet
         )
-async def refresh_login(data: AuthDataRefresh):
+async def refresh_login(data: AuthDataRefresh, res: Response):
     access, refresh = await auth_uc.refresh_jwt(data.refresh_token)
+    res.set_cookie(
+        key='access_token',
+        value=access,
+        secure=False,
+        httponly=True,
+        path='/'
+    )
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh,
+        secure=False,
+        httponly=True,
+        path='/auth/refresh'
+    )
     return TokenSet(token=access, refresh=refresh)

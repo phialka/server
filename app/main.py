@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth.routers import auth_routers
@@ -10,6 +10,7 @@ from private_chats.routers import private_chat_routers
 from servers.routers import server_routers
 from channels.routers import channel_routers
 from messages.routers import message_routers
+from messages.websockets import message_ws_router
 from files.routers import files_router
 
 from utils.openapi_documentation import CustomServerAPI
@@ -57,6 +58,7 @@ app.include_router(private_chat_routers)
 app.include_router(server_routers)
 app.include_router(channel_routers)
 app.include_router(message_routers)
+app.include_router(message_ws_router)
 app.include_router(files_router)
 
 

@@ -115,6 +115,7 @@ class UserMsgWebSocket(UserMsgReceiver):
     
     async def send_message(self, msg: ChannelMessage | PrivateMessage) -> None:
         try:
-            await self.ws.send_json(data=msg)
+            await self.ws.send_text(data=msg.model_dump_json())
         except WebSocketDisconnect:
-            raise ReceiverClosed
+            return
+            raise ReceiverClosed(msg='Receicer has been closed')

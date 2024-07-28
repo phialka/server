@@ -70,7 +70,7 @@ class MessageUseCases():
             attachments = [
                 await self.__create_attachment(adata, message_id)
                 for adata in msg_data.attachments
-            ]
+            ] if msg_data.attachments else []
         ) 
 
         await self.__msg_repo.save(message=msg)

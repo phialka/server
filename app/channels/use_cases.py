@@ -62,10 +62,10 @@ class ChannelUseCases():
         return md5(string.encode()).hexdigest()
     
 
-    async def __get_last_channel_sequence(self, channel_id: UUID) -> int:
+    async def _get_last_channel_sequence(self, channel_id: UUID) -> int:
         msgs = await self.__channel_msg_repo.get(filter=ChannelMessageFilter(channel_id=channel_id))
 
-        return len(msgs) - 1
+        return len(msgs)
 
 
     async def __check_requester_is_owner(self, requester_id: UUID, channel_id: UUID) -> None:
@@ -174,7 +174,7 @@ class ChannelUseCases():
         channel_msg = ChannelMessage(
             message = msg,
             channel_id = channel_id,
-            sequence = await self.__get_last_channel_sequence(channel_id)
+            sequence = await self._get_last_channel_sequence(channel_id)
         )
 
         await self.__channel_msg_repo.save(channel_msg)
@@ -183,10 +183,7 @@ class ChannelUseCases():
         
         for rec in self.__msg_uc.user_msg_reseivers:
             if rec.user_id in member_ids:
-                try:
-                    await rec.send_message(msg=channel_msg)
-                except ReceiverClosed:
-                    self.__msg_uc.delete_user_msg_receiver(user_id=rec.user_id)
+                await rec.send_message(msg=channel_msg)
                 
         return channel_msg
 

@@ -128,7 +128,7 @@ class PrivateChatUseCases():
 
         recs = self.__msg_uc.user_msg_reseivers
         for r in recs:
-            if r.user_id == recipient_id:
+            if (r.user_id == recipient_id) or (r.user_id == requester_id):
                 try:
                     await r.send_message(msg=private_msg)
                 except ReceiverClosed:

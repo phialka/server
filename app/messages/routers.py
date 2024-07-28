@@ -1,16 +1,12 @@
 from uuid import UUID
 from typing import Optional
 
-from fastapi import APIRouter, UploadFile, Response, status, Depends, Request, WebSocket
+from fastapi import APIRouter, UploadFile, Response, status, Depends, Request, WebSocket, Cookie
 from utils.fastapi_jwt_auth import auth_scheme, get_user_id
 
 from messages.schemas import Message, MessageUpdate
 from messages.use_cases import MessageUseCases
 from messages.adapters import SQLMessageRepo
-
-from users.adapters import SQLUserRepo, UserMsgWebSocket
-
-from auth.adapters import SQLAuthDataRepo
 
 from files.adapters import SQLFileRepo, SystemFileStorage
 
@@ -36,13 +32,12 @@ message_uc = MessageUseCases(
 
 
 
-@message_routers.websocket(
-        "/messages/ws"
+@message_routers.get(
+        "/messages/getWS", 
+        summary = 'Получить веб-сокет для приёма новых сообщений'
         )
-async def get_message_ws(ws: WebSocket, user_id: str = Depends(get_user_id)):
-    await ws.accept()
-    rec = UserMsgWebSocket(user_id=user_id, ws=ws)
-    return await message_uc.add_user_msg_receiver(rec)
+async def get_message_ws(req: Request, user_id: str = Depends(get_user_id), cookie: str = Depends(auth_scheme)):
+    return f'ws://{req.base_url.hostname}/messages/ws?token={cookie}'
 
 
 

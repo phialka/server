@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
     description: Optional[str] = None
     birthdate: Optional[date] = None
     tag: Optional[str] = None
-    login: str
+    username: str
     password: str
 
 

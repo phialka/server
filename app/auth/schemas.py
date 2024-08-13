@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class AuthData(BaseModel):
     user_id: UUID
-    login: str
+    username: str
     password_hash: str
 
 
@@ -24,7 +24,7 @@ class AuthDataRefresh(BaseModel):
         """
         scheme for validating user login request data
         """
-        refresh_token: str
+        refresh: str
 
 
 
@@ -32,5 +32,5 @@ class TokenSet(BaseModel):
         """
         scheme for validating user login request data
         """
-        token: str
+        access: str
         refresh: str

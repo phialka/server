@@ -62,7 +62,7 @@ class UserUseCases():
 
         #check login is free
         exist_auth = await self.__auth_repo.get()
-        if any([ad.login == login for ad in exist_auth]):
+        if any([ad.username == login for ad in exist_auth]):
             raise AlreadyExistsException(msg='Current login already involved')
         
         #check tag is free
@@ -87,7 +87,7 @@ class UserUseCases():
 
         auth_data = AuthData(
             user_id=user_id,
-            login=login,
+            username=login,
             password_hash=self.__hash(password)
             )
         

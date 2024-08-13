@@ -55,7 +55,7 @@ user_uc = UserUseCases(
         summary = 'Создать профиль'
         )
 async def register(user: UserCreate):
-    await user_uc.register_user(user.name, user.login, user.password, user.tag, user.description, user.birthdate)
+    await user_uc.register_user(user.name, user.username, user.password, user.tag, user.description, user.birthdate)
     return
 
 

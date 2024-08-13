@@ -27,7 +27,7 @@ class SQLAuthDataRepo(AuthDataRepo):
     async def save(self, data: AuthData) -> bool:
         await self.__table.objects.create(
             user_id = data.user_id,
-            login = data.login,
+            login = data.username,
             pass_hash = data.password_hash
         )
 
@@ -41,7 +41,7 @@ class SQLAuthDataRepo(AuthDataRepo):
             auth_data = await self.__table.objects.all()
         auth_data = [AuthData(
                 user_id=ad.user_id.id,
-                login=ad.login,
+                username=ad.login,
                 password_hash=ad.pass_hash
                 ) for ad in auth_data]
 

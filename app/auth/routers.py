@@ -50,7 +50,7 @@ async def login(data: AuthDataBasic, res: Response):
         path='/auth/refresh'
     )
 
-    return TokenSet(token=access, refresh=refresh)
+    return TokenSet(access=access, refresh=refresh)
 
 
 
@@ -60,7 +60,7 @@ async def login(data: AuthDataBasic, res: Response):
         response_model = TokenSet
         )
 async def refresh_login(data: AuthDataRefresh, res: Response):
-    access, refresh = await auth_uc.refresh_jwt(data.refresh_token)
+    access, refresh = await auth_uc.refresh_jwt(data.refresh)
     res.set_cookie(
         key='access_token',
         value=access,
@@ -75,4 +75,4 @@ async def refresh_login(data: AuthDataRefresh, res: Response):
         httponly=True,
         path='/auth/refresh'
     )
-    return TokenSet(token=access, refresh=refresh)
+    return TokenSet(access=access, refresh=refresh)

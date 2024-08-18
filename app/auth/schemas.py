@@ -16,7 +16,7 @@ class AuthDataBasic(BaseModel):
         scheme for validating user login request data
         """
         username: str
-        userpass: str
+        password: str
 
 
 

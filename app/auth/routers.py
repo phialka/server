@@ -34,7 +34,7 @@ auth_uc = AuthUseCases(
         response_model = TokenSet
         )
 async def login(data: AuthDataBasic, res: Response):
-    access, refresh = await auth_uc.get_jwt_by_logpass(data.username, data.userpass)
+    access, refresh = await auth_uc.get_jwt_by_logpass(data.username, data.password)
     res.set_cookie(
         key='access_token',
         value=access,

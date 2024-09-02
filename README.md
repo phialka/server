@@ -2,12 +2,29 @@
 
 ## Project structure
 
-- entities: Domain entities data models
-- use_cases: Use cases and abstract classes which it use
-- adapters: Realization of the use cases abstract classes
-- rest_api: Api routers (now we using FasAPI)
-- database: Database models 
-- utils: Other utils which may come in handy
+The project is divided into modules, according to the subdomain areas:
+- Auth: authentication and authorization services.
+- Users: user profile services.
+- Files: files storing, uploading and downloading services.
+- Servers: server management services.
+- Channels: channel management services.
+- Private_chats: private chats management services.
+- Messages: messaging service.
+
+Each module has the following structure:
+- schemas.py - main dataclasses, used in the app business logic.
+- apstracts.py - interfaces, used in the service use cases.
+- use_cases.py - service use cases; direct functions of the service, can be used from external services.
+- adapters.py - implementation of interfaces that are used in use cases.
+- routers.py - REST API routers for this service.
+- dbmodels.py - database models for service entities.
+
+### Data model
+
+**ER diagram**:
+
+![alt text](docs/images/main_ERD.png)
+
 
 
 ## Application launch
@@ -33,6 +50,7 @@ python app/main.py
 > ```
 > DATABASE_URL=postgresql://you_user:you_password@database:5432/test_db
 > ```
+
 
 
 ## Enjoy

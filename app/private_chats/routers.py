@@ -9,7 +9,7 @@ from private_chats.schemas import PrivateChat, PrivateMessage
 from private_chats.use_cases import PrivateChatUseCases
 from private_chats.adapters import SQLPrivateChatRepo, SQLPrivateMessageRepo
 
-from messages.schemas import MessageCerate
+from messages.schemas import MessageCreate
 from messages.adapters import SQLMessageRepo
 from messages.routers import message_uc
 
@@ -86,7 +86,7 @@ async def delete_chat_by_id(chat_id: UUID, user_id: str = Depends(get_user_id)):
         summary = 'Отправить сообщение пользователю',
         tags=['messages']
         )
-async def send_message_to_user(user_id: UUID, msg: MessageCerate, requester_id: str = Depends(get_user_id)):
+async def send_message_to_user(user_id: UUID, msg: MessageCreate, requester_id: str = Depends(get_user_id)):
     await chat_uc.create_private_message(requester_id=requester_id, recipient_id=user_id, msg_data=msg)
 
     return

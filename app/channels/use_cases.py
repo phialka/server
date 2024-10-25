@@ -6,7 +6,7 @@ from typing import Optional
 
 from channels.schemas import Channel, ChannelMessage
 from servers.schemas import Server
-from messages.schemas import MessageCerate
+from messages.schemas import MessageCreate
 
 from channels.abstracts import ChannelFilter, ChannelRepo, ChannelMessageRepo, ChannelMessageFilter
 from servers.abstracts import ServerRepo, ServerFilter, ServerMemberRepo
@@ -163,7 +163,7 @@ class ChannelUseCases():
             self,
             requester_id: UUID,
             channel_id: UUID,
-            msg_data: MessageCerate
+            msg_data: MessageCreate
             ) -> ChannelMessage:
         
         requester = await self.__user_uc.get_user_by_id(user_id=requester_id)

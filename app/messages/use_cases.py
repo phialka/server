@@ -4,7 +4,7 @@ from hashlib import md5
 from datetime import datetime
 from typing import Optional
 
-from messages.schemas import Message, Attachment, MessageCerate, AttachmentCreate
+from messages.schemas import Message, Attachment, MessageCreate, AttachmentCreate
 
 from messages.abstracts import MessageRepo, MessageFilter
 from files.abstracts import FileRepo, FileStorage
@@ -58,7 +58,7 @@ class MessageUseCases():
         self.__user_msg_receivers = [rec for rec in self.__user_msg_receivers if rec.user_id != user_id]
 
 
-    async def create_message(self, msg_data: MessageCerate, author_id: UUID) -> Message:
+    async def create_message(self, msg_data: MessageCreate, author_id: UUID) -> Message:
         message_id = uuid4()
         msg = Message(
             message_id = message_id,

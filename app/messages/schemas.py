@@ -13,7 +13,7 @@ class AttachmentCreate(BaseModel):
 
 
 
-class MessageCerate(BaseModel):
+class MessageCreate(BaseModel):
     content: Optional[str] = None
     reply_message_id: Optional[UUID] = None
     attachments: Optional[list[AttachmentCreate]] = None

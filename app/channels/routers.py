@@ -12,7 +12,7 @@ from files.adapters import SQLFileRepo, SystemFileStorage
 from users.adapters import SQLUserRepo
 from auth.adapters import SQLAuthDataRepo
 
-from messages.schemas import MessageCerate
+from messages.schemas import MessageCreate
 from messages.adapters import SQLMessageRepo
 from messages.routers import message_uc
 
@@ -133,7 +133,7 @@ async def delete_channel_logo(channel_id: UUID, user_id: str = Depends(get_user_
         summary = 'Отправить сообщение в текстовый канал',
         tags=['messages']
         )
-async def send_message_to_channel(channel_id: UUID, msg: MessageCerate, requester_id: str = Depends(get_user_id)):
+async def send_message_to_channel(channel_id: UUID, msg: MessageCreate, requester_id: str = Depends(get_user_id)):
     await channel_uc.create_channel_message(requester_id=requester_id, channel_id=channel_id, msg_data=msg)
 
     return

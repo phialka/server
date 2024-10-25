@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from private_chats.schemas import PrivateChat, PrivateMessage
-from messages.schemas import Message, MessageCerate
+from messages.schemas import Message, MessageCreate
 from users.schemas import User
 
 from private_chats.abstracts import PrivateChatRepo, PrivateChatFilter, PrivateMessageRepo, PrivateMessageFilter
@@ -108,7 +108,7 @@ class PrivateChatUseCases():
             self, 
             requester_id: UUID, 
             recipient_id: UUID, 
-            msg_data: MessageCerate
+            msg_data: MessageCreate
             ) -> PrivateMessage:
         
         requester = await self.__user_uc.get_user_by_id(user_id=requester_id)

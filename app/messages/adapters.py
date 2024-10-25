@@ -1,7 +1,7 @@
 from typing import Optional, Union
 from uuid import uuid4, UUID
 
-from messages.schemas import Message, MessageCerate, Attachment, AttachmentCreate
+from messages.schemas import Message, MessageCreate, Attachment, AttachmentCreate
 from messages.abstracts import MessageRepo, MessageFilter
 from messages.dbmodels import Message as DBMessage, Attachment as DBAttachment
 

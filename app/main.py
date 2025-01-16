@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from auth.routers import auth_routers
+from auth.routers import auth_routers, login_routers
 from users.routers import users_routers, profile_routers, register_routers
 from private_chats.routers import private_chat_routers
 from servers.routers import server_routers
@@ -50,6 +50,7 @@ app.add_middleware(
 
 
 
+app.include_router(login_routers)
 app.include_router(auth_routers)
 app.include_router(register_routers)
 app.include_router(profile_routers)

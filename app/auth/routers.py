@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends, Cookie, Request
+from utils.fastapi_jwt_auth import auth_scheme
 
 from auth.schemas import AuthDataBasic, AuthDataRefresh, TokenSet
 from auth.use_caces import AuthUseCases
@@ -10,9 +11,15 @@ import config
 
 
 
-auth_routers = APIRouter(
+login_routers = APIRouter(
     prefix = "/auth",
     tags = ["auth"]
+)
+
+auth_routers =APIRouter(
+    prefix = "/auth",
+    tags = ["auth"],
+    dependencies=[Depends(auth_scheme)]
 )
 
 
@@ -28,10 +35,9 @@ auth_uc = AuthUseCases(
 
 
 
-@auth_routers.post(
+@login_routers.post(
         "", 
-        summary = 'Получить JWT токен по логину и паролю',
-        response_model = TokenSet
+        summary = 'Получить JWT токен по логину и паролю'
         )
 async def login(data: AuthDataBasic, res: Response):
     access, refresh = await auth_uc.get_jwt_by_logpass(data.username, data.password)
@@ -49,18 +55,26 @@ async def login(data: AuthDataBasic, res: Response):
         httponly=True,
         path='/auth/refresh'
     )
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh,
+        secure=False,
+        httponly=True,
+        path='/auth/logout'
+    )
 
-    return TokenSet(access=access, refresh=refresh)
+    return
 
 
 
-@auth_routers.post(
+@auth_routers.get(
         "/refresh", 
-        summary = 'Получить JWT токен по refresh-токену',
-        response_model = TokenSet
+        summary = 'Получить JWT токен по refresh-токену'
         )
-async def refresh_login(data: AuthDataRefresh, res: Response):
-    access, refresh = await auth_uc.refresh_jwt(data.refresh)
+async def refresh_login(requeset: Request, res: Response):
+    refresh_token: str = requeset.cookies.get('refresh_token')
+    print('\n\n\n' + refresh_token + '\n\n\n')
+    access, refresh = await auth_uc.refresh_jwt(refresh_token)
     res.set_cookie(
         key='access_token',
         value=access,
@@ -75,4 +89,46 @@ async def refresh_login(data: AuthDataRefresh, res: Response):
         httponly=True,
         path='/auth/refresh'
     )
-    return TokenSet(access=access, refresh=refresh)
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh,
+        secure=False,
+        httponly=True,
+        path='/auth/logout'
+    )
+    return
+
+
+
+@auth_routers.delete(
+    "/logout",
+    summary='Завершить сессию'
+)
+async def logout(requeset: Request, res: Response):
+    access_token: str = requeset.cookies.get('access_token')
+    refresh_token: str = requeset.cookies.get('refresh_token')
+    res.set_cookie(
+        key='access_token',
+        value=access_token,
+        expires=0,
+        secure=False,
+        httponly=True,
+        path='/'
+    )
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        expires=0,
+        secure=False,
+        httponly=True,
+        path='/auth/refresh'
+    )
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        expires=0,
+        secure=False,
+        httponly=True,
+        path='/auth/logout'
+    )
+    return
